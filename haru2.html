@@ -602,7 +602,7 @@ function initStats(){
   attachInputLogging();
 }
 function showStat(id,el){
-  document.querySelectorAll('[id^="stat-"]').forEach(x=>x.style.display='none');
+  document.querySelectorAll('#stat-waga, #stat-aktywnosc, #stat-portfel').forEach(x=>x.style.display='none');
   document.getElementById('stat-'+id).style.display='block';
   document.querySelectorAll('.s-tab').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
