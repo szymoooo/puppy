@@ -56,6 +56,8 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
 .card.green{background:var(--cardGreen)}
 .h2{font-size:22px;font-weight:800;color:var(--primary);margin-bottom:8px}
 .small{font-size:13px;color:var(--secondary)}
+.range-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--cardBeige);font-weight:700;cursor:pointer}
+.range-btn:hover{background:var(--cardGreen)}
 .cal-wrap{padding:16px;background:var(--bg)}
 .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .cal-month{font-size:20px;font-weight:800;color:var(--primary)}
@@ -105,7 +107,6 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
   </div>
 </div>
 
-<!-- KONTENER TREŚCI ZAKŁADEK -->
 <div class="view-container" id="viewContainer"></div>
 
 <div class="tabbar" id="tabbar" style="display:none">
@@ -116,31 +117,27 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
   <div class="tab" data-tab="profile" id="tab-profile" onclick="switchTab('profile')"><span class="t-ico">👤</span>Profil</div>
 </div>
 
-<!-- MODAL OGÓLNY -->
 <div class="modal" id="modal" onclick="if(event.target==this)closeSheet()"><div class="sheet" id="sheetContent"></div></div>
 
-<!-- MODAL EDYTORA ZDJĘĆ -->
 <div class="editor-modal" id="editorModal">
   <div class="editor-container">
     <h3 style="text-align:center;margin-bottom:16px">Dopasuj zdjęcie</h3>
-    <div class="editor-preview" id="editorPreview">
-      <img id="editorImage" src="" alt="">
-    </div>
+    <div class="editor-preview" id="editorPreview"><img id="editorImage" src="" alt=""></div>
     <div class="editor-controls">
       <div style="font-size:14px;font-weight:700;">Przesuń w górę / w dół</div>
       <input type="range" class="editor-slider" id="editorSlider" min="0" max="100" value="50" step="1">
       <div style="font-size:14px;font-weight:700;margin-top:8px;">Przybliż / Oddal</div>
       <input type="range" class="editor-slider" id="editorZoomSlider" min="0.5" max="3" step="0.1" value="1">
       <div class="editor-buttons">
-        <button style="background:var(--cardBeige);border:1px solid var(--border)" id="btn-editor-cancel" onclick="closeEditor()">Anuluj</button>
-        <button style="background:var(--primary);color:white" id="btn-editor-save" onclick="saveEditedPhoto()">Zapisz</button>
+        <button style="background:var(--cardBeige);border:1px solid var(--border)" onclick="closeEditor()">Anuluj</button>
+        <button style="background:var(--primary);color:white" onclick="saveEditedPhoto()">Zapisz</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ============ LISTA RAS ============
+  // ============ LISTA RAS ============
 const dogBreeds = [
   "Beagle","Bokser","Border collie","Bulldog francuski","Cane corso",
   "Cavalier king charles spaniel","Chart afgański","Chart polski","Chihuahua",
@@ -192,6 +189,7 @@ function attachBreedAutocomplete(inputId, suggestionsId) {
 let data = JSON.parse(localStorage.getItem('mypuppy_v17'));
 let currentTab='dashboard';
 let onboardingStep = 1;
+let aktywnoscRange = 30;
 
 // Unikalne ID
 let taskIdCounter = Date.now();
@@ -392,7 +390,7 @@ function saveOnboarding() {
       targetWeight: '',
       birthDate: step1.birthDate || '',
       age: step1.birthDate ? calculateAge(step1.birthDate) : 'Wiek nieznany',
-      img: step1.img || '', // puste, updateHeader użyje domyślnego obrazka
+      img: step1.img || '',
       imgPosition: step1.imgPosition || '50% 50%',
       imgZoom: step1.imgZoom || 1
     },
@@ -439,7 +437,6 @@ function updateHeader(){
     img.style.objectPosition = data.pet.imgPosition || '50% 50%';
     img.style.transform = `scale(${data.pet.imgZoom || 1})`;
   } else {
-    // Domyślne zdjęcie, gdy użytkownik nie dodał własnego
     img.src = 'dogbackground.jpg';
     img.style.display = 'block';
     img.style.objectPosition = '50% 50%';
@@ -577,6 +574,11 @@ function renderStats(){
     <div id="stat-aktywnosc" style="display:none">
       <div class="card">
         <div class="h2">Spacery</div>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <button onclick="setAktywnoscRange(1)" class="range-btn">1D</button>
+          <button onclick="setAktywnoscRange(7)" class="range-btn">7D</button>
+          <button onclick="setAktywnoscRange(30)" class="range-btn">30D</button>
+        </div>
         ${data.walks.length ? `<canvas id="chartSpacer" height="130"></canvas>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak spacerów</p>`}
       </div>
       <div class="card green" style="display:flex;justify-content:space-between">
@@ -638,15 +640,37 @@ function rysujWage(){
   document.getElementById('wNow').textContent = data.pet.weight;
 }
 function rysujSpacery(){
-  const spacery = data.walks;
+  let spacery = data.walks.map(w => (typeof w === 'number') ? { km: w, min: 0 } : w);
   if(!spacery.length) return;
+  spacery = spacery.slice(-aktywnoscRange);
+  
   let ctx=document.getElementById('chartSpacer'); 
   if(window.cS) window.cS.destroy();
-  window.cS=new Chart(ctx,{type:'bar',data:{labels:spacery.map((_,i)=>`Spacer ${i+1}`),datasets:[{data:spacery,backgroundColor:'#D6E9D3',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
-  const sum = spacery.reduce((a,b)=>a+b,0);
-  document.getElementById('sumKm').textContent=sum.toFixed(1)+' km';
-  document.getElementById('avgMin').textContent='-- min';
-  document.getElementById('listaSpacerow').innerHTML=spacery.map((km,i)=>`<div class="card"><span>Spacer ${i+1}</span><span>${km} km</span></div>`).join('');
+  window.cS=new Chart(ctx,{type:'bar',data:{labels:spacery.map((_,i)=>`Spacer ${i+1}`),datasets:[{data:spacery.map(s=>s.km),backgroundColor:'#D6E9D3',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+  
+  const sumKm = spacery.reduce((a,b)=>a+b.km,0);
+  document.getElementById('sumKm').textContent = sumKm.toFixed(1)+' km';
+  
+  const withTime = spacery.filter(s => s.min > 0);
+  if (withTime.length > 0) {
+    const sumMin = withTime.reduce((a,b)=>a+b.min,0);
+    const avg = Math.round(sumMin / withTime.length);
+    document.getElementById('avgMin').textContent = avg + ' min';
+  } else {
+    document.getElementById('avgMin').textContent = '-- min';
+  }
+  
+  document.getElementById('listaSpacerow').innerHTML = spacery.map((s,i)=>{
+    let opis = `Spacer ${i+1} • ${s.km} km`;
+    if (s.min > 0) opis += `, ${s.min} min`;
+    return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;"><span>${opis}</span></div>`;
+  }).join('');
+}
+function setAktywnoscRange(days){
+  aktywnoscRange = days;
+  renderTab('stats');
+  const aktywnoscTab = document.querySelector('.s-tab[onclick*="aktywnosc"]');
+  if(aktywnoscTab) showStat('aktywnosc', aktywnoscTab);
 }
 function rysujPortfel(){
   const wydatki = data.expenses;
@@ -1041,9 +1065,9 @@ function saveFeeding(){
   if(currentTab==='stats') renderTab('stats'); else renderTab('dashboard');
 }
 function saveWalk(){
-  let km=document.getElementById('w_km').value||'0';
-  let min=document.getElementById('w_min').value||'0';
-  data.walks.push(parseFloat(km));
+  let km=parseFloat(document.getElementById('w_km').value)||0;
+  let min=parseInt(document.getElementById('w_min').value)||0;
+  data.walks.push({km,min});
   data.tasks.push({id:Date.now(),type:'walk',title:'Spacer',sub:km+' km • '+min+' min',icon:'🦮',done:true,date:new Date().toISOString().slice(0,10)});
   save();
   logAction(`Dodano spacer: ${km} km, ${min} min`);
