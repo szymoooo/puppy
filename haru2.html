@@ -560,7 +560,7 @@ function renderStats(){
       <div class="s-tab" id="stat-tab-portfel" onclick="showStat('portfel',this)">Portfel</div>
     </div>
     <div id="stat-waga">
-      <div class="waga-card">
+     <div class="waga-card">
   <div style="display:flex;justify-content:space-between"><h2 style="font-size:22px">Waga</h2><span style="color:var(--secondary);font-size:13px">ostatnie 30 dni</span></div>
   ${data.weights.length ? `<canvas id="chartWaga" height="120"></canvas>
   <div style="text-align:right;margin-top:8px;font-weight:700;color:var(--secondary);font-size:14px">${data.pet.weight}${data.pet.targetWeight ? ' • Cel: ' + data.pet.targetWeight : ''}</div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak pomiarów wagi. Dodaj pierwszą wagę.</p>`}
@@ -622,10 +622,22 @@ function rysujWage(){
   if(!wagi.length) return;
   let ctx=document.getElementById('chartWaga'); 
   if(window.cW) window.cW.destroy();
-  const datasets = [{ data: wagi, borderColor:'#0F3D2E', backgroundColor:'#D6E9D3', tension:0.4, fill:true }];
+  const datasets = [{ 
+    data: wagi, 
+    borderColor:'#8FBF9A', 
+    backgroundColor:'rgba(143,191,154,0.15)', 
+    tension:0.4, 
+    fill:true 
+  }];
   if (data.pet.targetWeight) {
     const target = parseFloat(data.pet.targetWeight);
-    if (!isNaN(target)) datasets.push({ data:Array(wagi.length).fill(target), borderColor:'#E74C3C', borderDash:[5,5], pointRadius:0, fill:false });
+    if (!isNaN(target)) datasets.push({ 
+      data:Array(wagi.length).fill(target), 
+      borderColor:'#E74C3C', 
+      borderDash:[5,5], 
+      pointRadius:0, 
+      fill:false 
+    });
   }
   window.cW=new Chart(ctx,{type:'line',data:{labels:wagi.map((_,i)=>i+1),datasets},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
   document.getElementById('listaWag').innerHTML = wagi.map((w,i)=>{
