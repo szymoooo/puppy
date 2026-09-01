@@ -392,7 +392,7 @@ function saveOnboarding() {
       targetWeight: '',
       birthDate: step1.birthDate || '',
       age: step1.birthDate ? calculateAge(step1.birthDate) : 'Wiek nieznany',
-      img: step1.img || '',
+      img: step1.img || '', // puste, updateHeader użyje domyślnego obrazka
       imgPosition: step1.imgPosition || '50% 50%',
       imgZoom: step1.imgZoom || 1
     },
@@ -439,7 +439,11 @@ function updateHeader(){
     img.style.objectPosition = data.pet.imgPosition || '50% 50%';
     img.style.transform = `scale(${data.pet.imgZoom || 1})`;
   } else {
-    img.style.display = 'none';
+    // Domyślne zdjęcie, gdy użytkownik nie dodał własnego
+    img.src = 'dogbackground.jpg';
+    img.style.display = 'block';
+    img.style.objectPosition = '50% 50%';
+    img.style.transform = 'scale(1)';
   }
 }
 
