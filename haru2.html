@@ -12,7 +12,7 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
 .header{padding:12px 16px}
 .top-card{position:relative;height:200px;border-radius:24px;overflow:hidden;background:var(--cardBeige)}
 .top-card img{width:100%;height:100%;object-fit:cover;object-position:var(--img-pos, 50% 50%);transform:scale(var(--img-zoom, 1))}
-.top-card .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(255,248,237,0.6);backdrop-filter:blur(12px);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:24px;border-top-right-radius:24px}
+.top-card .overlay{position:absolute;bottom:12px;left:12px;background:rgba(255,248,237,0.6);backdrop-filter:blur(12px);padding:10px 14px;display:inline-flex;align-items:center;border-radius:16px;max-width:calc(100% - 24px)}
 .top-icons{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:2}
 .icon-btn{width:40px;height:40px;background:var(--cardBeige);border-radius:12px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
 .section{padding:16px}
@@ -96,12 +96,11 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
   <div class="top-card" onclick="switchTab('profile')">
     <img id="petImg" src="" alt="Zdjęcie pupila">
     <div class="top-icons">
-      <button class="icon-btn" onclick="event.stopPropagation();openNotifications()">🔔</button>
-      <button class="icon-btn" onclick="event.stopPropagation();switchTab('profile')">👤</button>
+      <button class="icon-btn" id="btn-notifications" onclick="event.stopPropagation();openNotifications()">🔔</button>
+      <button class="icon-btn" id="btn-profile" onclick="event.stopPropagation();switchTab('profile')">👤</button>
     </div>
     <div class="overlay">
       <div><div style="font-weight:800;font-size:22px"><span id="petName"></span> 🐾</div><div style="color:var(--secondary);font-size:13px"><span id="petAge"></span> • <span id="petWeight"></span></div></div>
-      <div>✏️</div>
     </div>
   </div>
 </div>
@@ -110,11 +109,11 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
 <div class="view-container" id="viewContainer"></div>
 
 <div class="tabbar" id="tabbar" style="display:none">
-  <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="t-ico">🏠</span>Dashboard</div>
-  <div class="tab" data-tab="stats" onclick="switchTab('stats')"><span class="t-ico">📊</span>Statystyki</div>
-  <div class="tab" data-tab="calendar" onclick="switchTab('calendar')"><span class="t-ico">📅</span>Kalendarz</div>
-  <div class="tab" data-tab="grooming" onclick="switchTab('grooming')"><span class="t-ico">✂️</span>Pielęgnacja</div>
-  <div class="tab" data-tab="profile" onclick="switchTab('profile')"><span class="t-ico">👤</span>Profil</div>
+  <div class="tab active" data-tab="dashboard" id="tab-dashboard" onclick="switchTab('dashboard')"><span class="t-ico">🏠</span>Dashboard</div>
+  <div class="tab" data-tab="stats" id="tab-stats" onclick="switchTab('stats')"><span class="t-ico">📊</span>Statystyki</div>
+  <div class="tab" data-tab="calendar" id="tab-calendar" onclick="switchTab('calendar')"><span class="t-ico">📅</span>Kalendarz</div>
+  <div class="tab" data-tab="grooming" id="tab-grooming" onclick="switchTab('grooming')"><span class="t-ico">✂️</span>Pielęgnacja</div>
+  <div class="tab" data-tab="profile" id="tab-profile" onclick="switchTab('profile')"><span class="t-ico">👤</span>Profil</div>
 </div>
 
 <!-- MODAL OGÓLNY -->
@@ -133,8 +132,8 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
       <div style="font-size:14px;font-weight:700;margin-top:8px;">Przybliż / Oddal</div>
       <input type="range" class="editor-slider" id="editorZoomSlider" min="0.5" max="3" step="0.1" value="1">
       <div class="editor-buttons">
-        <button style="background:var(--cardBeige);border:1px solid var(--border)" onclick="closeEditor()">Anuluj</button>
-        <button style="background:var(--primary);color:white" onclick="saveEditedPhoto()">Zapisz</button>
+        <button style="background:var(--cardBeige);border:1px solid var(--border)" id="btn-editor-cancel" onclick="closeEditor()">Anuluj</button>
+        <button style="background:var(--primary);color:white" id="btn-editor-save" onclick="saveEditedPhoto()">Zapisz</button>
       </div>
     </div>
   </div>
@@ -178,6 +177,7 @@ function showBreedSuggestions(inputId, suggestionsId) {
 function selectBreed(inputId, suggestionsId, breed) {
   document.getElementById(inputId).value = breed;
   document.getElementById(suggestionsId).style.display = 'none';
+  logAction(`Wybrano rasę: ${breed} w polu ${inputId}`);
 }
 
 function attachBreedAutocomplete(inputId, suggestionsId) {
@@ -197,6 +197,11 @@ let onboardingStep = 1;
 let taskIdCounter = Date.now();
 function generateUniqueId() {
   return ++taskIdCounter;
+}
+
+// Logowanie
+function logAction(message) {
+  console.log(`[MyPuppy] ${new Date().toLocaleTimeString()} - ${message}`);
 }
 
 function save(){localStorage.setItem('mypuppy_v17',JSON.stringify(data));}
@@ -289,11 +294,15 @@ function showOnboarding(step) {
           <div class="suggestions" id="onb_breed_suggestions"></div>
         </div>
         <input class="input" id="onb_weight" placeholder="Waga w kg (opcjonalnie)" type="number" step="0.1">
-        <input class="input" id="onb_birth" type="date" placeholder="Data urodzenia (opcjonalnie)">
-        <button class="btn-save" onclick="validateStep1()">Dalej ➡️</button>
+        <div class="profile-field">
+          <label for="onb_birth" style="font-size:14px;color:var(--secondary);margin-bottom:4px;">Data urodzenia (opcjonalnie)</label>
+          <input class="input" id="onb_birth" type="date">
+        </div>
+        <button class="btn-save" id="btn-onboarding-next" onclick="validateStep1()">Dalej ➡️</button>
       </div>
     `;
     attachBreedAutocomplete('onb_breed', 'onb_breed_suggestions');
+    attachInputLogging();
   } else if (step === 2) {
     container.innerHTML = `
       <div class="onboarding-wrap">
@@ -301,24 +310,24 @@ function showOnboarding(step) {
         <div class="onboarding-sub">Ustal harmonogram posiłków</div>
         <label>Ile posiłków dziennie?</label>
         <select class="input" id="mealsPerDay" onchange="updateMealTimeInputs()">
-          <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
           <option value="4">4</option>
-          <option value="5">5</option>
+          <option value="1">1</option>
         </select>
         <label>Waga jednego posiłku (g) – opcjonalnie</label>
-        <input class="input" id="mealWeight" type="number" placeholder="np. 100">
+        <input class="input" id="mealWeight" type="number" placeholder="np. 150">
         <label>Godziny posiłków</label>
         <div id="mealTimesContainer"></div>
         <label class="flex items-center gap-2">
           <input type="checkbox" id="waterReminder" checked> Przypominaj rano o wodzie
         </label>
-        <button class="btn-save" onclick="saveOnboarding()">Zaczynamy! 🎉</button>
-        <button class="input" style="text-align:center;background:transparent;border:none;color:var(--secondary)" onclick="showOnboarding(1)">← Wróć</button>
+        <button class="btn-save" id="btn-onboarding-save" onclick="saveOnboarding()">Zaczynamy! 🎉</button>
+        <button class="input" id="btn-onboarding-back" style="text-align:center;background:transparent;border:none;color:var(--secondary)" onclick="showOnboarding(1)">← Wróć</button>
       </div>
     `;
     updateMealTimeInputs();
+    attachInputLogging();
   }
 }
 
@@ -328,10 +337,11 @@ function updateMealTimeInputs() {
   if (!container) return;
   let html = '';
   for (let i = 0; i < count; i++) {
-    const defaultTime = i === 0 ? '07:00' : (i === 1 ? '12:00' : '15:00');
+    const defaultTime = i === 0 ? '07:00' : (i === 1 ? '18:00' : '12:00');
     html += `<input class="input" type="time" id="mealTime_${i}" value="${defaultTime}">`;
   }
   container.innerHTML = html;
+  attachInputLogging();
 }
 
 let onboardingPhotoData = '';
@@ -341,6 +351,7 @@ let onboardingPhotoZoom = 1;
 function validateStep1() {
   const name = document.getElementById('onb_name').value.trim();
   if (!name) { alert('Imię pupila jest wymagane!'); return; }
+  logAction(`Onboarding krok 1 - imię: ${name}, rasa: ${document.getElementById('onb_breed').value}, waga: ${document.getElementById('onb_weight').value}`);
   window.onbData = {
     name: name,
     breed: document.getElementById('onb_breed').value.trim() || 'Nieznana',
@@ -402,6 +413,7 @@ function saveOnboarding() {
     data.tasks.push({ id: generateUniqueId(), type:'water', title:'Sprawdź wodę', sub:'Wymień na świeżą', icon:'💧', done:false, date:today, time: waterTime });
   }
   save();
+  logAction('Onboarding zakończony, zapisano dane i wygenerowano zadania.');
   showApp();
 }
 
@@ -437,6 +449,7 @@ function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   const activeTab = document.querySelector(`.tab[data-tab="${tab}"]`);
   if(activeTab) activeTab.classList.add('active');
+  logAction(`Przełączono zakładkę: ${tab}`);
   renderTab(tab);
 }
 
@@ -447,6 +460,7 @@ function renderTab(tab){
   else if(tab==='calendar'){ container.innerHTML=renderCalendar(); initCalendar(); }
   else if(tab==='grooming'){ container.innerHTML=renderGrooming(); }
   else if(tab==='profile'){ container.innerHTML=renderProfile(); populateFeedingPlanFields(); }
+  attachInputLogging();
 }
 
 // ============ DASHBOARD ============
@@ -457,7 +471,7 @@ function renderDashboard(){
   todaysTasks.sort((a,b) => (a.time || '23:59').localeCompare(b.time || '23:59'));
 
   let tasksHtml = todaysTasks.length ? todaysTasks.map(t=>`
-    <div class="task-card" data-id="${t.id}">
+    <div class="task-card" data-id="${t.id}" data-type="${t.type}">
       <div class="check">✓</div>
       <div style="font-size:22px">${t.icon}</div>
       <h3>${t.title}</h3>
@@ -468,16 +482,16 @@ function renderDashboard(){
   const poopCount = pottyToday.filter(p => p.type === 'poop').length;
   const peeCount = pottyToday.filter(p => p.type === 'pee').length;
   const quickActions = [
-    { label:'Karmienie', icon:'🍖', onclick:"openSheet('feeding')" },
-    { label:'Spacer', icon:'🦮', onclick:"openSheet('walk')" },
-    { label:'Lekarstwo', icon:'💊', onclick:"openSheet('medicine')" },
-    { label:'Waga', icon:'⚖️', onclick:"openSheet('weight')" },
-    { label:'Siku', icon:'💧', onclick:"addPotty('pee')" },
-    { label:'Kupa', icon:'💩', onclick:"addPotty('poop')" }
+    { id:'q-btn-feeding', label:'Karmienie', icon:'🍖', onclick:"openSheet('feeding')" },
+    { id:'q-btn-walk', label:'Spacer', icon:'🦮', onclick:"openSheet('walk')" },
+    { id:'q-btn-medicine', label:'Lekarstwo', icon:'💊', onclick:"openSheet('medicine')" },
+    { id:'q-btn-weight', label:'Waga', icon:'⚖️', onclick:"openSheet('weight')" },
+    { id:'q-btn-pee', label:'Siku', icon:'💧', onclick:"addPotty('pee')" },
+    { id:'q-btn-poop', label:'Kupa', icon:'💩', onclick:"addPotty('poop')" }
   ];
   const n = quickActions.length;
   const cols = n <= 4 ? n : (n <= 6 ? 3 : 4);
-  const quickHtml = `<div class="quick-grid" style="grid-template-columns:repeat(${cols},1fr)">` + quickActions.map(a => `<div class="q-btn" onclick="${a.onclick}"><span>${a.icon}</span>${a.label}</div>`).join('') + '</div>';
+  const quickHtml = `<div class="quick-grid" style="grid-template-columns:repeat(${cols},1fr)">` + quickActions.map(a => `<div class="q-btn" id="${a.id}" onclick="${a.onclick}"><span>${a.icon}</span>${a.label}</div>`).join('') + '</div>';
   return `
   <div class="section">
     <div class="section-head"><h2>Dzisiaj</h2><div class="chip">📅 ${today}</div></div>
@@ -495,13 +509,18 @@ function renderDashboard(){
 function attachDashboardEvents(){
   document.querySelectorAll('.task-card').forEach(card=>{
     card.onclick=()=>{
-      const id=parseInt(card.dataset.id);
-      const task=data.tasks.find(t=>t.id===id);
+      const id = parseInt(card.dataset.id);
+      const type = card.dataset.type;
+      logAction(`Kliknięto zadanie: id=${id}, typ=${type}`);
+      const task = data.tasks.find(t => t.id === id);
       if(task){ 
         task.done = true; 
         save(); 
+        logAction(`Zadanie ${id} (${task.title}) oznaczone jako wykonane.`);
         renderTab('dashboard'); 
         updateHeader(); 
+      } else {
+        logAction(`Nie znaleziono zadania o id=${id}`);
       }
     };
   });
@@ -524,6 +543,7 @@ function addPotty(type) {
   const todayStr = new Date().toISOString().slice(0,10);
   data.pottyBreaks = data.pottyBreaks || [];
   data.pottyBreaks.push({ type, date: todayStr, time: new Date().toTimeString().slice(0,5) });
+  logAction(`Dodano zdarzenie toaletowe: ${type}`);
   save();
   renderTab('dashboard');
 }
@@ -534,9 +554,9 @@ function renderStats(){
   <div class="stats-wrap">
     <h1 style="font-size:26px;font-weight:800;margin-bottom:12px">Statystyki</h1>
     <div class="stat-tabs">
-      <div class="s-tab active" onclick="showStat('waga',this)">Waga</div>
-      <div class="s-tab" onclick="showStat('aktywnosc',this)">Aktywność</div>
-      <div class="s-tab" onclick="showStat('portfel',this)">Portfel</div>
+      <div class="s-tab active" id="stat-tab-waga" onclick="showStat('waga',this)">Waga</div>
+      <div class="s-tab" id="stat-tab-aktywnosc" onclick="showStat('aktywnosc',this)">Aktywność</div>
+      <div class="s-tab" id="stat-tab-portfel" onclick="showStat('portfel',this)">Portfel</div>
     </div>
     <div id="stat-waga">
       <div class="card green">
@@ -548,7 +568,7 @@ function renderStats(){
         </div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak danych o wadze</p>`}
       </div>
       <div id="listaWag"></div>
-      <button onclick="dodajWage()" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj pomiar</button>
+      <button onclick="dodajWage()" id="btn-add-weight" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj pomiar</button>
     </div>
     <div id="stat-aktywnosc" style="display:none">
       <div class="card">
@@ -568,19 +588,21 @@ function renderStats(){
         ${data.expenses.length ? `<canvas id="chartKasa" height="130"></canvas>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak wydatków</p>`}
       </div>
       <div id="listaWydatkow"></div>
-      <button onclick="openSheet('expense')" style="width:100%;background:var(--cardGreen);padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj wydatek</button>
+      <button onclick="openSheet('expense')" id="btn-add-expense" style="width:100%;background:var(--cardGreen);padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj wydatek</button>
     </div>
   </div>`;
 }
 
 function initStats(){
   showStat('waga', document.querySelector('.s-tab'));
+  attachInputLogging();
 }
 function showStat(id,el){
   document.querySelectorAll('[id^="stat-"]').forEach(x=>x.style.display='none');
   document.getElementById('stat-'+id).style.display='block';
   document.querySelectorAll('.s-tab').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
+  logAction(`Przełączono podzakładkę statystyk: ${id}`);
   if(id==='waga') rysujWage();
   if(id==='aktywnosc') rysujSpacery();
   if(id==='portfel') rysujPortfel();
@@ -672,6 +694,7 @@ function dodajWage(){
   data.weightDates.push(new Date().toISOString().slice(0,10));
   data.pet.weight = val.toFixed(1)+' kg';
   save(); 
+  logAction(`Dodano pomiar wagi: ${val} kg`);
   if(currentTab==='stats') {
     renderTab('stats');
     const wagaTab = document.querySelector('.s-tab[onclick*="waga"]');
@@ -689,16 +712,16 @@ function renderCalendar(){
   return `
   <div class="cal-wrap">
     <div class="cal-header">
-      <button onclick="zmienMies(-1)" style="background:var(--cardGreen);border:none;padding:8px 14px;border-radius:10px;font-weight:700">‹</button>
+      <button onclick="zmienMies(-1)" id="btn-cal-prev" style="background:var(--cardGreen);border:none;padding:8px 14px;border-radius:10px;font-weight:700">‹</button>
       <div class="cal-month" id="calMonthLabel"></div>
-      <button onclick="zmienMies(1)" style="background:var(--cardGreen);border:none;padding:8px 14px;border-radius:10px;font-weight:700">›</button>
+      <button onclick="zmienMies(1)" id="btn-cal-next" style="background:var(--cardGreen);border:none;padding:8px 14px;border-radius:10px;font-weight:700">›</button>
     </div>
     <div class="cal-grid"><div class="cal-day-name">Pn</div><div class="cal-day-name">Wt</div><div class="cal-day-name">Śr</div><div class="cal-day-name">Cz</div><div class="cal-day-name">Pt</div><div class="cal-day-name">So</div><div class="cal-day-name">Nd</div></div>
     <div class="cal-grid" id="calGrid"></div>
     
     <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center">
       <b id="selDateLabel">Wydarzenia</b>
-      <button onclick="dodajWizyte()" style="background:var(--primary);color:white;border:none;padding:8px 14px;border-radius:12px;font-weight:700">+ Wizyta</button>
+      <button onclick="dodajWizyte()" id="btn-add-event" style="background:var(--primary);color:white;border:none;padding:8px 14px;border-radius:12px;font-weight:700">+ Wizyta</button>
     </div>
     <div id="dayEvents"></div>
   </div>`;
@@ -706,6 +729,7 @@ function renderCalendar(){
 function initCalendar(){
   curM = new Date(selDate);
   renderCal();
+  attachInputLogging();
 }
 function renderCal(){
   document.getElementById('calMonthLabel').textContent=curM.toLocaleDateString('pl-PL',{month:'long',year:'numeric'});
@@ -724,7 +748,7 @@ function renderCal(){
     div.className='cal-day'+(iso===todayStr?' today':'')+(has?' has':'')+(iso===selDate?' selected':'');
     div.textContent=d;
     if(has){let dot=document.createElement('div'); dot.className='dot'; div.appendChild(dot);}
-    div.onclick=()=>{selDate=iso; renderCal(); renderDay()};
+    div.onclick=()=>{selDate=iso; logAction(`Wybrano datę w kalendarzu: ${iso}`); renderCal(); renderDay()};
     grid.appendChild(div);
   }
   renderDay();
@@ -750,7 +774,7 @@ function renderDay(){
   if(!html) el.innerHTML='<div style="color:var(--secondary);padding:12px;text-align:center">Brak wydarzeń tego dnia</div>';
   else el.innerHTML=html;
 }
-function zmienMies(dir){curM.setMonth(curM.getMonth()+dir); renderCal();}
+function zmienMies(dir){curM.setMonth(curM.getMonth()+dir); logAction(`Zmieniono miesiąc w kalendarzu`); renderCal();}
 function dodajWizyte(){
   let t=prompt('Tytuł wizyty np WET Kontrola'); 
   if(!t) return;
@@ -758,9 +782,10 @@ function dodajWizyte(){
   let type = confirm('Czy to wizyta weterynaryjna?') ? 'vet' : 'groom';
   data.events.push({id:Date.now(),date:selDate,title:t,sub:g,type:type});
   save(); 
+  logAction(`Dodano wizytę: ${t}, data: ${selDate}`);
   renderCal();
 }
-function usunZad(id){data.events=data.events.filter(z=>z.id!==id); save(); renderCal();}
+function usunZad(id){data.events=data.events.filter(z=>z.id!==id); save(); logAction(`Usunięto wizytę o id=${id}`); renderCal();}
 
 // ============ PIELĘGNACJA ============
 function renderGrooming(){
@@ -782,10 +807,10 @@ function renderGrooming(){
       <div class="grooming-item"><span>🪮 Czesanie</span><span>${daysSince(lastBrush?.date)}</span></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button class="btn-save" style="margin-top:0" onclick="addGrooming('bath')">🛁 Kąpiel</button>
-      <button class="btn-save" style="margin-top:0" onclick="addGrooming('trim')">✂️ Strzyżenie</button>
-      <button class="btn-save" style="margin-top:0" onclick="addGrooming('nails')">💅 Pazurki</button>
-      <button class="btn-save" style="margin-top:0" onclick="addGrooming('brush')">🪮 Czesanie</button>
+      <button class="btn-save" id="btn-groom-bath" style="margin-top:0" onclick="addGrooming('bath')">🛁 Kąpiel</button>
+      <button class="btn-save" id="btn-groom-trim" style="margin-top:0" onclick="addGrooming('trim')">✂️ Strzyżenie</button>
+      <button class="btn-save" id="btn-groom-nails" style="margin-top:0" onclick="addGrooming('nails')">💅 Pazurki</button>
+      <button class="btn-save" id="btn-groom-brush" style="margin-top:0" onclick="addGrooming('brush')">🪮 Czesanie</button>
     </div>
   </div>`;
 }
@@ -794,6 +819,7 @@ function addGrooming(type) {
   data.groomingLog = data.groomingLog || [];
   data.groomingLog.push({ type, date: today });
   save();
+  logAction(`Dodano zabieg pielęgnacyjny: ${type}`);
   renderTab('grooming');
 }
 
@@ -815,10 +841,10 @@ function renderProfile(){
       <div class="profile-field"><label>Waga docelowa (kg)</label><input class="input" id="p_targetWeight" value="${data.pet.targetWeight || ''}" placeholder="np. 14"></div>
       <div class="profile-field">
         <label>Zdjęcie</label>
-        <button class="btn-save" style="margin-top:0" onclick="document.getElementById('profilePhotoInput').click()">📷 Zmień zdjęcie</button>
+        <button class="btn-save" id="btn-change-photo" style="margin-top:0" onclick="document.getElementById('profilePhotoInput').click()">📷 Zmień zdjęcie</button>
         <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="openEditor(event.target.files[0], 'profile')">
       </div>
-      <button class="btn-save" onclick="savePetFromProfile()">Zapisz zmiany</button>
+      <button class="btn-save" id="btn-save-profile" onclick="savePetFromProfile()">Zapisz zmiany</button>
     </div>
 
     <!-- SEKCJA PLAN KARMIENIA -->
@@ -846,11 +872,11 @@ function renderProfile(){
           <input type="checkbox" id="feeding_waterReminder" style="width:auto"> Przypominaj rano o wodzie
         </label>
       </div>
-      <button class="btn-save" onclick="saveFeedingPlan()">Zapisz plan</button>
+      <button class="btn-save" id="btn-save-feeding-plan" onclick="saveFeedingPlan()">Zapisz plan</button>
     </div>
 
-    <button class="sos-btn" onclick="openSheet('sos')">🚨 SOS Zaginął pies</button>
-    <button class="input" style="text-align:center;background:transparent;border:none;color:red;font-weight:700;margin-top:8px" onclick="resetApp()">🗑️ Resetuj aplikację</button>
+    <button class="sos-btn" id="btn-sos" onclick="openSheet('sos')">🚨 SOS Zaginął pies</button>
+    <button class="input" id="btn-reset" style="text-align:center;background:transparent;border:none;color:red;font-weight:700;margin-top:8px" onclick="resetApp()">🗑️ Resetuj aplikację</button>
   </div>`;
   attachBreedAutocomplete('p_breed', 'p_breed_suggestions');
 }
@@ -885,6 +911,7 @@ function updateProfileMealTimeInputs() {
       if (input) input.value = t;
     });
   }
+  attachInputLogging();
 }
 function saveFeedingPlan() {
   const mealsPerDay = parseInt(document.getElementById('feeding_mealsPerDay').value) || 2;
@@ -923,6 +950,7 @@ function saveFeedingPlan() {
   }
   
   save();
+  logAction('Zapisano plan karmienia i przeliczono zadania.');
   renderTab('profile');
 }
 function savePetFromProfile(){
@@ -942,18 +970,21 @@ function savePetFromProfile(){
     }
   }
   save(); 
+  logAction('Zapisano zmiany w profilu.');
   updateHeader(); 
   renderTab('profile');
 }
 function resetApp(){
   if(confirm('Czy na pewno chcesz usunąć wszystkie dane?')) {
     localStorage.removeItem('mypuppy_v17');
+    logAction('Zresetowano aplikację.');
     location.reload();
   }
 }
 
 // ============ MODALE OGÓLNE ============
 function openSheet(type){
+ logAction(`Otworzono sheet: ${type}`);
  let html='';
  if(type=='feeding'){html=`<h3>🍖 Dodaj karmienie</h3><input class="input" id="f_time" type="time" value="`+new Date().toTimeString().slice(0,5)+`"><input class="input" id="f_amount" placeholder="Ilość np 120g"><select class="input" id="f_type"><option>Sucha</option><option>Mokra</option><option>BARF</option></select><button class="btn-save" onclick="saveFeeding()">Zapisz</button>`;}
  else if(type=='walk'){html=`<h3>🦮 Dodaj spacer</h3><input class="input" id="w_km" placeholder="km" type="number" step="0.1"><input class="input" id="w_min" placeholder="min" type="number"><button class="btn-save" onclick="saveWalk()">Zapisz</button>`;}
@@ -968,20 +999,25 @@ function openSheet(type){
  else if(type=='sos'){html=`<h3>🚨 Zaginął pies</h3><input class="input" id="sos_phone" placeholder="Twój numer telefonu"><input class="input" id="sos_date" type="date" value="${new Date().toISOString().slice(0,10)}"><input class="input" id="sos_note" placeholder="Dodatkowe informacje"><button class="btn-save" onclick="generateSOSPoster()">Generuj plakat</button>`;}
  document.getElementById('sheetContent').innerHTML=html;
  document.getElementById('modal').classList.add('open');
+ attachInputLogging();
 }
 function closeSheet(){document.getElementById('modal').classList.remove('open')}
 function saveFeeding(){
   let t=document.getElementById('f_time').value;
   let a=document.getElementById('f_amount').value;
   data.tasks.push({id:Date.now(),type:'feeding',title:'Karmienie',sub:t+' • '+(a||'Gotowe'),icon:'🍖',done:true,date:new Date().toISOString().slice(0,10)});
-  save();renderTab('dashboard');closeSheet();
+  save();
+  logAction(`Dodano karmienie: ${t}, ${a}`);
+  renderTab('dashboard');closeSheet();
 }
 function saveWalk(){
   let km=document.getElementById('w_km').value||'0';
   let min=document.getElementById('w_min').value||'0';
   data.walks.push(parseFloat(km));
   data.tasks.push({id:Date.now(),type:'walk',title:'Spacer',sub:km+' km • '+min+' min',icon:'🦮',done:true,date:new Date().toISOString().slice(0,10)});
-  save();renderTab('dashboard');closeSheet();
+  save();
+  logAction(`Dodano spacer: ${km} km, ${min} min`);
+  renderTab('dashboard');closeSheet();
 }
 function saveWeight(){
   let v=parseFloat(document.getElementById('w_val').value);
@@ -990,12 +1026,16 @@ function saveWeight(){
   if(!data.weightDates) data.weightDates=[];
   data.weightDates.push(new Date().toISOString().slice(0,10));
   data.pet.weight=v.toFixed(1)+' kg';
-  save();renderTab('dashboard');updateHeader();closeSheet();
+  save();
+  logAction(`Dodano wagę: ${v} kg`);
+  renderTab('dashboard');updateHeader();closeSheet();
 }
 function saveMed(){
   let n=document.getElementById('m_name').value;
   data.tasks.push({id:Date.now(),type:'medicine',title:n||'Lek',sub:'Dodano',icon:'💊',done:false,date:new Date().toISOString().slice(0,10)});
-  save();renderTab('dashboard');closeSheet();
+  save();
+  logAction(`Dodano lek: ${n}`);
+  renderTab('dashboard');closeSheet();
 }
 function saveExpense(){
   let cat=document.getElementById('exp_cat').value;
@@ -1003,6 +1043,7 @@ function saveExpense(){
   if(!amount) return;
   data.expenses.push({cat, kwota:amount, d:new Date().toISOString().slice(0,10)});
   save();
+  logAction(`Dodano wydatek: ${cat}, ${amount} zł`);
   closeSheet();
   if(currentTab==='stats') {
     renderTab('stats');
@@ -1019,6 +1060,7 @@ function generateSOSPoster(){
   const name = data.pet.name;
   const breed = data.pet.breed || 'Nieznana';
   const img = data.pet.img || '';
+  logAction('Wygenerowano plakat SOS.');
   const htmlContent = `<!DOCTYPE html><html><head><title>Zaginął ${name}</title><style>
     body{font-family:sans-serif;background:#FFFBF2;color:#0F3D2E;text-align:center;padding:20px}
     .poster{max-width:500px;margin:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
@@ -1045,9 +1087,9 @@ function openNotifications(){
   const today = new Date().toISOString().slice(0,10);
   const todayTasks = data.tasks.filter(t => t.date === today && !t.done);
   todayTasks.sort((a,b) => (a.time || '23:59').localeCompare(b.time || '23:59'));
-  
+  logAction('Otwarto powiadomienia, liczba zadań: ' + todayTasks.length);
   let tasksHtml = todayTasks.length ? todayTasks.map(t => `
-    <div class="card" style="margin-top:8px">
+    <div class="card" style="margin-top:8px" data-task-id="${t.id}">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <b>${t.icon} ${t.title}</b><br>
@@ -1088,6 +1130,7 @@ function openEditor(file, type) {
     document.getElementById('editorZoomSlider').value = 1;
     updateEditorPosition();
     document.getElementById('editorModal').classList.add('open');
+    logAction('Otwarto edytor zdjęć');
   };
   reader.readAsDataURL(file);
 }
@@ -1146,14 +1189,32 @@ function saveEditedPhoto() {
     preview.src = editorImageData;
     preview.style.display = 'block';
     document.getElementById('photoPlaceholder').style.display = 'none';
+    logAction('Zapisano zdjęcie z onboardingu');
   } else if (editorCallbackType === 'profile') {
     data.pet.img = editorImageData;
     data.pet.imgPosition = `50% ${editorY}%`;
     data.pet.imgZoom = editorZoom;
     save();
     updateHeader();
+    logAction('Zapisano zdjęcie w profilu');
   }
   closeEditor();
+}
+
+// ============ LOGOWANIE INPUTÓW ============
+function attachInputLogging() {
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    if (!el.dataset.logged) {
+      el.dataset.logged = 'true';
+      const id = el.id || 'brak-id';
+      el.addEventListener('input', () => {
+        logAction(`Wprowadzono wartość w polu ${id}: ${el.value}`);
+      });
+      el.addEventListener('change', () => {
+        logAction(`Zmieniono pole ${id}: ${el.value}`);
+      });
+    }
+  });
 }
 </script>
 </body>
