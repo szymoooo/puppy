@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>My Puppy - App</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#FFFBF2;--cardBeige:#FFF8ED;--cardGreen:#D6E9D3;--cardGreen2:#C5DEBF;--primary:#0F3D2E;--secondary:#4A7C6F;--icon:#7AB098;--border:#F0E6D3;--accent:#8FBF9A}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif}
+body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:90px}
+.header{padding:12px 16px}
+.top-card{position:relative;height:200px;border-radius:24px;overflow:hidden;background:var(--cardBeige)}
+.top-card img{width:100%;height:100%;object-fit:cover;object-position:var(--img-pos, 50% 50%);transform:scale(var(--img-zoom, 1))}
+.top-card .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(255,248,237,0.6);backdrop-filter:blur(12px);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:24px;border-top-right-radius:24px}
+.top-icons{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:2}
+.icon-btn{width:40px;height:40px;background:var(--cardBeige);border-radius:12px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+.section{padding:16px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-head h2{font-size:26px;font-weight:800}
+.chip{background:var(--cardGreen);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;display:flex;gap:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.task-card{background:var(--cardBeige);border-radius:18px;padding:16px;cursor:pointer;position:relative;border:1.5px solid transparent}
+.task-card.done{background:var(--cardGreen);border-color:var(--accent)}
+.task-card h3{font-size:16px;margin-bottom:4px}
+.task-card p{font-size:13px;color:var(--secondary)}
+.check{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;opacity:0}
+.task-card.done .check{opacity:1}
+.waga-card{background:var(--cardGreen);border-radius:20px;padding:16px;margin-top:12px}
+.quick-grid{display:grid;gap:10px}
+.q-btn{background:var(--cardBeige);border-radius:16px;padding:12px 6px;text-align:center;border:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:700;transition:0.2s}
+.q-btn span{display:block;font-size:20px;margin-bottom:4px}
+.tabbar{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:460px;background:var(--cardBeige);border-radius:24px;padding:10px 8px;display:flex;justify-content:space-around;box-shadow:0 10px 30px rgba(15,61,46,0.15);z-index:10}
+.tab{flex:1;text-align:center;padding:6px;font-size:11px;font-weight:700;color:var(--secondary);cursor:pointer;border-radius:14px}
+.tab.active{color:var(--primary);background:var(--cardGreen)}
+.tab .t-ico{font-size:22px;display:block}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.open{display:flex}
+.sheet{background:var(--bg);width:100%;max-width:480px;border-radius:28px 28px 0 0;padding:22px;max-height:85vh;overflow:auto}
+.input{width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);background:white;margin:8px 0;font-size:15px}
+.btn-save{width:100%;background:var(--primary);color:white;padding:16px;border-radius:14px;border:none;font-weight:800;margin-top:12px;font-size:16px;cursor:pointer}
+.potty-counter{font-size:14px;color:var(--secondary);margin-top:8px}
+.grooming-item{display:flex;justify-content:space-between;align-items:center;background:var(--cardBeige);border-radius:12px;padding:10px;margin-bottom:8px}
+.sos-btn{background:#E74C3C;color:white;border:none;padding:16px;border-radius:16px;font-weight:800;font-size:18px;width:100%;margin-top:16px;cursor:pointer}
+.onboarding-wrap{padding:24px 16px;display:flex;flex-direction:column;gap:16px}
+.onboarding-title{font-size:28px;font-weight:800;text-align:center}
+.onboarding-sub{color:var(--secondary);text-align:center;font-size:15px}
+.photo-upload{width:120px;height:120px;border-radius:50%;background:var(--cardBeige);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto;cursor:pointer;overflow:hidden;position:relative}
+.photo-upload img{width:100%;height:100%;object-fit:cover}
+.photo-placeholder{font-size:40px;color:var(--secondary)}
+.stats-wrap{padding:16px;background:var(--bg)}
+.stat-tabs{display:flex;gap:8px;margin-bottom:16px}
+.s-tab{padding:10px 18px;border-radius:20px;background:var(--cardBeige);font-weight:700;font-size:14px;cursor:pointer;border:1px solid var(--border)}
+.s-tab.active{background:var(--primary);color:white}
+.card{background:var(--cardBeige);border-radius:20px;padding:16px;margin-bottom:12px}
+.card.green{background:var(--cardGreen)}
+.h2{font-size:22px;font-weight:800;color:var(--primary);margin-bottom:8px}
+.small{font-size:13px;color:var(--secondary)}
+.cal-wrap{padding:16px;background:var(--bg)}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cal-month{font-size:20px;font-weight:800;color:var(--primary)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
+.cal-day-name{font-size:11px;color:var(--secondary);font-weight:700;padding:6px}
+.cal-day{padding:12px 2px;border-radius:12px;background:var(--cardBeige);font-size:14px;cursor:pointer;position:relative;border:1px solid var(--border)}
+.cal-day.today{background:var(--primary);color:white}
+.cal-day.has{background:var(--cardGreen)}
+.cal-day.selected{outline:2px solid var(--primary)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--primary);position:absolute;bottom:4px;left:50%;transform:translateX(-50%)}
+.event{background:var(--cardBeige);border-radius:14px;padding:12px;margin:8px 0;display:flex;justify-content:space-between;border-left:4px solid var(--cardGreen)}
+.event.vet{border-left-color:var(--primary)}
+.event.med{border-left-color:var(--accent)}
+.profile-field{margin-bottom:12px}
+.profile-field label{font-weight:700;font-size:14px;display:block;margin-bottom:4px}
+
+/* Edytor zdjęć */
+.editor-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100}
+.editor-modal.open{display:flex}
+.editor-container{background:var(--bg);width:calc(100% - 32px);max-width:460px;border-radius:24px;padding:20px}
+.editor-preview{position:relative;width:100%;height:200px;overflow:hidden;border-radius:16px;background:#ddd;cursor:grab;touch-action:none}
+.editor-preview img{position:absolute;width:100%;height:100%;object-fit:cover;object-position:var(--pos,50% 50%);transform:scale(var(--zoom, 1));transform-origin:center;pointer-events:none}
+.editor-controls{margin-top:16px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.editor-slider{width:100%}
+.editor-buttons{display:flex;gap:10px}
+.editor-buttons button{flex:1;padding:12px;border-radius:12px;border:none;font-weight:700;cursor:pointer}
+
+/* Autocomplete */
+.autocomplete-wrapper{position:relative;margin:8px 0}
+.suggestions{position:absolute;top:100%;left:0;right:0;background:white;border-radius:0 0 12px 12px;box-shadow:0 8px 20px rgba(0,0,0,0.1);z-index:20;max-height:200px;overflow-y:auto;display:none}
+.suggestions div{padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border)}
+.suggestions div:last-child{border-bottom:none}
+.suggestions div:hover{background:var(--cardGreen)}
+</style>
+</head>
+<body>
+<div class="header" id="appHeader" style="display:none">
+  <div class="top-card" onclick="switchTab('profile')">
+    <img id="petImg" src="" alt="Zdjęcie pupila">
+    <div class="top-icons">
+      <button class="icon-btn" onclick="event.stopPropagation();openNotifications()">🔔</button>
+      <button class="icon-btn" onclick="event.stopPropagation();switchTab('profile')">👤</button>
+    </div>
+    <div class="overlay">
+      <div><div style="font-weight:800;font-size:22px"><span id="petName"></span> 🐾</div><div style="color:var(--secondary);font-size:13px"><span id="petAge"></span> • <span id="petWeight"></span></div></div>
+      <div>✏️</div>
+    </div>
+  </div>
+</div>
+
+<!-- KONTENER TREŚCI ZAKŁADEK -->
+<div class="view-container" id="viewContainer"></div>
+
+<div class="tabbar" id="tabbar" style="display:none">
+  <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="t-ico">🏠</span>Dashboard</div>
+  <div class="tab" data-tab="stats" onclick="switchTab('stats')"><span class="t-ico">📊</span>Statystyki</div>
+  <div class="tab" data-tab="calendar" onclick="switchTab('calendar')"><span class="t-ico">📅</span>Kalendarz</div>
+  <div class="tab" data-tab="grooming" onclick="switchTab('grooming')"><span class="t-ico">✂️</span>Pielęgnacja</div>
+  <div class="tab" data-tab="profile" onclick="switchTab('profile')"><span class="t-ico">👤</span>Profil</div>
+</div>
+
+<!-- MODAL OGÓLNY -->
+<div class="modal" id="modal" onclick="if(event.target==this)closeSheet()"><div class="sheet" id="sheetContent"></div></div>
+
+<!-- MODAL EDYTORA ZDJĘĆ -->
+<div class="editor-modal" id="editorModal">
+  <div class="editor-container">
+    <h3 style="text-align:center;margin-bottom:16px">Dopasuj zdjęcie</h3>
+    <div class="editor-preview" id="editorPreview">
+      <img id="editorImage" src="" alt="">
+    </div>
+    <div class="editor-controls">
+      <div style="font-size:14px;font-weight:700;">Przesuń w górę / w dół</div>
+      <input type="range" class="editor-slider" id="editorSlider" min="0" max="100" value="50" step="1">
+      <div style="font-size:14px;font-weight:700;margin-top:8px;">Przybliż / Oddal</div>
+      <input type="range" class="editor-slider" id="editorZoomSlider" min="0.5" max="3" step="0.1" value="1">
+      <div class="editor-buttons">
+        <button style="background:var(--cardBeige);border:1px solid var(--border)" onclick="closeEditor()">Anuluj</button>
+        <button style="background:var(--primary);color:white" onclick="saveEditedPhoto()">Zapisz</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ LISTA RAS ============
+const dogBreeds = [
+  "Beagle","Bokser","Border collie","Bulldog francuski","Cane corso",
+  "Cavalier king charles spaniel","Chart afgański","Chart polski","Chihuahua",
+  "Chow chow","Cocker spaniel","Cocker spaniel amerykański","Corgi",
+  "Dalmatyńczyk","Doberman","Dog niemiecki","Dogo argentino","Foksterier",
+  "Foksterier krótkowłosy","Foksterier szorstkowłosy","Golden retriever",
+  "Gończy polski","Gryfonik","Hawańczyk","Husky","Husky syberyjski",
+  "Jack russell terrier","Jamnik","Jamnik długowłosy","Jamnik krótkowłosy",
+  "Jamnik szorstkowłosy","Kangal","King charles spaniel","Kundel",
+  "Labrador retriever","Lagotto romagnolo","Leonberger","Maltańczyk",
+  "Mastif angielski","Mops","Niemiecki szpic","Nova scotia duck tolling",
+  "Owczarek australijski","Owczarek belgijski","Owczarek niemiecki",
+  "Owczarek niemiecki długowłosy","Owczarek szkocki","Pekińczyk","Pinczer",
+  "Pinczer miniaturowy","Pit bull","Pomeranian","Pudel","Pudel królewski",
+  "Pudel miniaturowy","Pudel średni","Pudel toy","Rhodesian ridgeback",
+  "Rottweiler","Samoyed","Seter irlandzki","Shih tzu","Springer spaniel",
+  "Staffordshire bull terrier","Sznaucer","Sznaucer miniaturowy",
+  "Sznaucer olbrzymi","Terier walijski","West highland white terrier",
+  "Wilczak czechosłowacki","Yorkshire terrier"
+];
+
+function showBreedSuggestions(inputId, suggestionsId) {
+  const input = document.getElementById(inputId);
+  const box = document.getElementById(suggestionsId);
+  if (!input || !box) return;
+  const query = input.value.trim().toLowerCase();
+  if (!query) { box.style.display = 'none'; return; }
+  const matches = dogBreeds.filter(b => b.toLowerCase().includes(query)).slice(0, 8);
+  if (matches.length === 0) { box.style.display = 'none'; return; }
+  box.innerHTML = matches.map(m => `<div onclick="selectBreed('${inputId}','${suggestionsId}','${m.replace(/'/g, "\\'")}')">${m}</div>`).join('');
+  box.style.display = 'block';
+}
+
+function selectBreed(inputId, suggestionsId, breed) {
+  document.getElementById(inputId).value = breed;
+  document.getElementById(suggestionsId).style.display = 'none';
+}
+
+function attachBreedAutocomplete(inputId, suggestionsId) {
+  const input = document.getElementById(inputId);
+  const box = document.getElementById(suggestionsId);
+  if (!input || !box) return;
+  input.addEventListener('input', () => showBreedSuggestions(inputId, suggestionsId));
+  input.addEventListener('blur', () => setTimeout(() => box.style.display = 'none', 200));
+}
+
+// ============ DANE ============
+let data = JSON.parse(localStorage.getItem('mypuppy_v17'));
+let currentTab='dashboard';
+let onboardingStep = 1;
+
+// Unikalne ID
+let taskIdCounter = Date.now();
+function generateUniqueId() {
+  return ++taskIdCounter;
+}
+
+function save(){localStorage.setItem('mypuppy_v17',JSON.stringify(data));}
+
+// Inicjalizacja
+if (!data || !data.pet) {
+  showOnboarding(1);
+} else {
+  ensureDailyTasks();
+  showApp();
+}
+
+function ensureDailyTasks(){
+  const today = new Date().toISOString().slice(0,10);
+  const hasFeeding = data.tasks.some(t => t.type === 'feeding' && t.date === today);
+  if (!hasFeeding && data.feedingPlan && data.feedingPlan.enabled) {
+    const feedingTasks = generateFeedingTasksForDate(today);
+    data.tasks = data.tasks.concat(feedingTasks);
+  }
+  const hasWater = data.tasks.some(t => t.type === 'water' && t.date === today);
+  if (!hasWater && data.feedingPlan?.waterReminder) {
+    const firstMealTime = data.feedingPlan.mealTimes?.[0] || '07:00';
+    const waterTime = subtractMinutes(firstMealTime, 30);
+    data.tasks.push({
+      id: generateUniqueId(),
+      type:'water',
+      title:'Sprawdź wodę',
+      sub:'Wymień na świeżą',
+      icon:'💧',
+      done:false,
+      date:today,
+      time: waterTime
+    });
+  }
+  save();
+}
+
+function subtractMinutes(timeStr, minutes) {
+  if (!timeStr) return '';
+  const [h,m] = timeStr.split(':').map(Number);
+  const total = h*60 + m - minutes;
+  const nh = Math.floor(total/60)%24;
+  const nm = ((total%60)+60)%60;
+  return `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;
+}
+
+function generateFeedingTasksForDate(dateStr) {
+  const plan = data.feedingPlan;
+  if (!plan || !plan.enabled) return [];
+  const times = plan.mealTimes || [];
+  return times.map((time) => ({
+    id: generateUniqueId(),
+    type: 'feeding',
+    title: 'Karmienie',
+    sub: time + (plan.mealWeight ? ' • ' + plan.mealWeight + 'g' : ''),
+    icon: '🍖',
+    done: false,
+    date: dateStr,
+    time: time
+  }));
+}
+
+function showApp() {
+  document.getElementById('appHeader').style.display = 'block';
+  document.getElementById('tabbar').style.display = 'flex';
+  updateHeader();
+  switchTab('dashboard');
+}
+
+// ============ ONBOARDING ============
+function showOnboarding(step) {
+  onboardingStep = step;
+  document.getElementById('appHeader').style.display = 'none';
+  document.getElementById('tabbar').style.display = 'none';
+  const container = document.getElementById('viewContainer');
+  if (step === 1) {
+    container.innerHTML = `
+      <div class="onboarding-wrap">
+        <div class="onboarding-title">🐾 Witaj w My Puppy!</div>
+        <div class="onboarding-sub">Dodaj swojego pupila, aby rozpocząć</div>
+        <div class="photo-upload" id="photoUpload" onclick="document.getElementById('fileInputOnboarding').click()">
+          <span class="photo-placeholder" id="photoPlaceholder">📷</span>
+          <img id="onboardingPhotoPreview" style="display:none">
+        </div>
+        <input type="file" id="fileInputOnboarding" accept="image/*" style="display:none" onchange="openEditor(event.target.files[0], 'onboarding')">
+        <div style="text-align:center"><small style="color:var(--secondary)">Dodaj zdjęcie (opcjonalnie)</small></div>
+        <input class="input" id="onb_name" placeholder="Imię pupila * (wymagane)">
+        <div class="autocomplete-wrapper">
+          <input class="input" id="onb_breed" placeholder="Rasa (opcjonalnie)" autocomplete="off">
+          <div class="suggestions" id="onb_breed_suggestions"></div>
+        </div>
+        <input class="input" id="onb_weight" placeholder="Waga w kg (opcjonalnie)" type="number" step="0.1">
+        <input class="input" id="onb_birth" type="date" placeholder="Data urodzenia (opcjonalnie)">
+        <button class="btn-save" onclick="validateStep1()">Dalej ➡️</button>
+      </div>
+    `;
+    attachBreedAutocomplete('onb_breed', 'onb_breed_suggestions');
+  } else if (step === 2) {
+    container.innerHTML = `
+      <div class="onboarding-wrap">
+        <div class="onboarding-title">🍽️ Plan karmienia</div>
+        <div class="onboarding-sub">Ustal harmonogram posiłków</div>
+        <label>Ile posiłków dziennie?</label>
+        <select class="input" id="mealsPerDay" onchange="updateMealTimeInputs()">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+        <label>Waga jednego posiłku (g) – opcjonalnie</label>
+        <input class="input" id="mealWeight" type="number" placeholder="np. 100">
+        <label>Godziny posiłków</label>
+        <div id="mealTimesContainer"></div>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" id="waterReminder" checked> Przypominaj rano o wodzie
+        </label>
+        <button class="btn-save" onclick="saveOnboarding()">Zaczynamy! 🎉</button>
+        <button class="input" style="text-align:center;background:transparent;border:none;color:var(--secondary)" onclick="showOnboarding(1)">← Wróć</button>
+      </div>
+    `;
+    updateMealTimeInputs();
+  }
+}
+
+function updateMealTimeInputs() {
+  const count = parseInt(document.getElementById('mealsPerDay').value) || 2;
+  const container = document.getElementById('mealTimesContainer');
+  if (!container) return;
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    const defaultTime = i === 0 ? '07:00' : (i === 1 ? '12:00' : '15:00');
+    html += `<input class="input" type="time" id="mealTime_${i}" value="${defaultTime}">`;
+  }
+  container.innerHTML = html;
+}
+
+let onboardingPhotoData = '';
+let onboardingPhotoPosition = '50% 50%';
+let onboardingPhotoZoom = 1;
+
+function validateStep1() {
+  const name = document.getElementById('onb_name').value.trim();
+  if (!name) { alert('Imię pupila jest wymagane!'); return; }
+  window.onbData = {
+    name: name,
+    breed: document.getElementById('onb_breed').value.trim() || 'Nieznana',
+    weight: document.getElementById('onb_weight').value.trim(),
+    birthDate: document.getElementById('onb_birth').value,
+    img: onboardingPhotoData,
+    imgPosition: onboardingPhotoPosition,
+    imgZoom: onboardingPhotoZoom
+  };
+  showOnboarding(2);
+}
+
+function saveOnboarding() {
+  const step1 = window.onbData;
+  if (!step1) { showOnboarding(1); return; }
+  const mealsPerDay = parseInt(document.getElementById('mealsPerDay').value) || 2;
+  const mealWeight = document.getElementById('mealWeight').value.trim();
+  const mealTimes = [];
+  for (let i = 0; i < mealsPerDay; i++) {
+    mealTimes.push(document.getElementById(`mealTime_${i}`).value);
+  }
+  const waterReminder = document.getElementById('waterReminder').checked;
+  const weightVal = step1.weight;
+  const weightsArray = [];
+  const weightDatesArray = [];
+  if (weightVal) {
+    const val = parseFloat(weightVal);
+    if (!isNaN(val)) {
+      weightsArray.push(val);
+      weightDatesArray.push(new Date().toISOString().slice(0,10));
+    }
+  }
+  data = {
+    pet: {
+      name: step1.name,
+      breed: step1.breed,
+      weight: weightVal ? weightVal + ' kg' : '--',
+      targetWeight: '',
+      birthDate: step1.birthDate || '',
+      age: step1.birthDate ? calculateAge(step1.birthDate) : 'Wiek nieznany',
+      img: step1.img || '',
+      imgPosition: step1.imgPosition || '50% 50%',
+      imgZoom: step1.imgZoom || 1
+    },
+    tasks: [],
+    weights: weightsArray,
+    weightDates: weightDatesArray,
+    walks: [],
+    expenses: [],
+    events: [],
+    feedingPlan: { enabled: true, mealsPerDay, mealWeight: mealWeight || '', mealTimes, waterReminder },
+    groomingLog: [],
+    pottyBreaks: []
+  };
+  const today = new Date().toISOString().slice(0,10);
+  data.tasks = data.tasks.concat(generateFeedingTasksForDate(today));
+  if (waterReminder && mealTimes.length > 0) {
+    const waterTime = subtractMinutes(mealTimes[0], 30);
+    data.tasks.push({ id: generateUniqueId(), type:'water', title:'Sprawdź wodę', sub:'Wymień na świeżą', icon:'💧', done:false, date:today, time: waterTime });
+  }
+  save();
+  showApp();
+}
+
+function calculateAge(birthDate) {
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+  if (months < 0) { years--; months += 12; }
+  if (years === 0) return months + ' mies.';
+  else if (years === 1) return '1 rok';
+  else return years + ' lata';
+}
+
+function updateHeader(){
+  document.getElementById('petName').textContent = data.pet.name;
+  document.getElementById('petAge').textContent = data.pet.age || '';
+  document.getElementById('petWeight').textContent = data.pet.weight || '';
+  const img = document.getElementById('petImg');
+  if (data.pet.img) {
+    img.src = data.pet.img;
+    img.style.display = 'block';
+    img.style.objectPosition = data.pet.imgPosition || '50% 50%';
+    img.style.transform = `scale(${data.pet.imgZoom || 1})`;
+  } else {
+    img.style.display = 'none';
+  }
+}
+
+// ============ PRZEŁĄCZANIE ZAKŁADEK ============
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const activeTab = document.querySelector(`.tab[data-tab="${tab}"]`);
+  if(activeTab) activeTab.classList.add('active');
+  renderTab(tab);
+}
+
+function renderTab(tab){
+  const container=document.getElementById('viewContainer');
+  if(tab==='dashboard'){ container.innerHTML=renderDashboard(); attachDashboardEvents(); }
+  else if(tab==='stats'){ container.innerHTML=renderStats(); initStats(); }
+  else if(tab==='calendar'){ container.innerHTML=renderCalendar(); initCalendar(); }
+  else if(tab==='grooming'){ container.innerHTML=renderGrooming(); }
+  else if(tab==='profile'){ container.innerHTML=renderProfile(); populateFeedingPlanFields(); }
+}
+
+// ============ DASHBOARD ============
+function renderDashboard(){
+  const today=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'short'});
+  const todayStr = new Date().toISOString().slice(0,10);
+  let todaysTasks = data.tasks.filter(t => t.date === todayStr && !t.done);
+  todaysTasks.sort((a,b) => (a.time || '23:59').localeCompare(b.time || '23:59'));
+
+  let tasksHtml = todaysTasks.length ? todaysTasks.map(t=>`
+    <div class="task-card" data-id="${t.id}">
+      <div class="check">✓</div>
+      <div style="font-size:22px">${t.icon}</div>
+      <h3>${t.title}</h3>
+      <p>${t.sub}</p>
+    </div>`).join('') : `<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--secondary)">Brak zaplanowanych zadań na dziś.</div>`;
+
+  const pottyToday = (data.pottyBreaks || []).filter(p => p.date === todayStr);
+  const poopCount = pottyToday.filter(p => p.type === 'poop').length;
+  const peeCount = pottyToday.filter(p => p.type === 'pee').length;
+  const quickActions = [
+    { label:'Karmienie', icon:'🍖', onclick:"openSheet('feeding')" },
+    { label:'Spacer', icon:'🦮', onclick:"openSheet('walk')" },
+    { label:'Lekarstwo', icon:'💊', onclick:"openSheet('medicine')" },
+    { label:'Waga', icon:'⚖️', onclick:"openSheet('weight')" },
+    { label:'Siku', icon:'💧', onclick:"addPotty('pee')" },
+    { label:'Kupa', icon:'💩', onclick:"addPotty('poop')" }
+  ];
+  const n = quickActions.length;
+  const cols = n <= 4 ? n : (n <= 6 ? 3 : 4);
+  const quickHtml = `<div class="quick-grid" style="grid-template-columns:repeat(${cols},1fr)">` + quickActions.map(a => `<div class="q-btn" onclick="${a.onclick}"><span>${a.icon}</span>${a.label}</div>`).join('') + '</div>';
+  return `
+  <div class="section">
+    <div class="section-head"><h2>Dzisiaj</h2><div class="chip">📅 ${today}</div></div>
+    <div class="grid2">${tasksHtml}</div>
+    ${pottyToday.length ? `<div class="potty-counter">💩 Kupy: ${poopCount} | 💧 Siku: ${peeCount}</div>` : ''}
+    <div class="waga-card">
+      <div style="display:flex;justify-content:space-between"><h2 style="font-size:22px">Waga</h2><span style="color:var(--secondary);font-size:13px">ostatnie 30 dni</span></div>
+      ${data.weights.length ? `<canvas id="wChart" height="120"></canvas>
+      <div style="text-align:right;margin-top:8px;font-weight:700;color:var(--secondary);font-size:14px">${data.pet.weight}${data.pet.targetWeight ? ' • Cel: ' + data.pet.targetWeight : ''}</div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak pomiarów wagi. Dodaj pierwszą wagę.</p>`}
+    </div>
+    <div style="margin-top:18px"><h2 style="font-size:22px;margin-bottom:12px">Szybkie akcje</h2>${quickHtml}</div>
+  </div>`;
+}
+
+function attachDashboardEvents(){
+  document.querySelectorAll('.task-card').forEach(card=>{
+    card.onclick=()=>{
+      const id=parseInt(card.dataset.id);
+      const task=data.tasks.find(t=>t.id===id);
+      if(task){ 
+        task.done = true; 
+        save(); 
+        renderTab('dashboard'); 
+        updateHeader(); 
+      }
+    };
+  });
+  if(data.weights.length) drawDashboardChart();
+}
+
+function drawDashboardChart(){
+  const ctx=document.getElementById('wChart').getContext('2d');
+  if(window._dashChart) window._dashChart.destroy();
+  const allWeights = data.weights.slice(-30);
+  const datasets = [{ data: allWeights, borderColor:'#8FBF9A', backgroundColor:'rgba(143,191,154,0.15)', tension:0.4, fill:true }];
+  if (data.pet.targetWeight) {
+    const target = parseFloat(data.pet.targetWeight);
+    if (!isNaN(target)) datasets.push({ data:Array(allWeights.length).fill(target), borderColor:'#E74C3C', borderDash:[5,5], pointRadius:0, fill:false });
+  }
+  window._dashChart=new Chart(ctx,{type:'line',data:{labels:allWeights.map((_,i)=>i+1),datasets},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+}
+
+function addPotty(type) {
+  const todayStr = new Date().toISOString().slice(0,10);
+  data.pottyBreaks = data.pottyBreaks || [];
+  data.pottyBreaks.push({ type, date: todayStr, time: new Date().toTimeString().slice(0,5) });
+  save();
+  renderTab('dashboard');
+}
+
+// ============ STATYSTYKI ============
+function renderStats(){
+  return `
+  <div class="stats-wrap">
+    <h1 style="font-size:26px;font-weight:800;margin-bottom:12px">Statystyki</h1>
+    <div class="stat-tabs">
+      <div class="s-tab active" onclick="showStat('waga',this)">Waga</div>
+      <div class="s-tab" onclick="showStat('aktywnosc',this)">Aktywność</div>
+      <div class="s-tab" onclick="showStat('portfel',this)">Portfel</div>
+    </div>
+    <div id="stat-waga">
+      <div class="card green">
+        <div class="h2">Waga ${data.pet.name} <span class="small" style="float:right">ostatnie 30 dni</span></div>
+        ${data.weights.length ? `<canvas id="chartWaga" height="160"></canvas>
+        <div style="display:flex;justify-content:space-between;margin-top:10px">
+          <span class="small">Teraz: <b id="wNow">${data.pet.weight}</b></span>
+          ${data.pet.targetWeight ? `<span class="small">Cel: <b>${data.pet.targetWeight}</b></span>` : ''}
+        </div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak danych o wadze</p>`}
+      </div>
+      <div id="listaWag"></div>
+      <button onclick="dodajWage()" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj pomiar</button>
+    </div>
+    <div id="stat-aktywnosc" style="display:none">
+      <div class="card">
+        <div class="h2">Spacery</div>
+        ${data.walks.length ? `<canvas id="chartSpacer" height="130"></canvas>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak spacerów</p>`}
+      </div>
+      <div class="card green" style="display:flex;justify-content:space-between">
+        <div>Suma: <b id="sumKm">0 km</b></div>
+        <div>Śr. czas: <b id="avgMin">0 min</b></div>
+      </div>
+      <div id="listaSpacerow"></div>
+    </div>
+    <div id="stat-portfel" style="display:none">
+      <div class="card">
+        <div class="h2">Wydatki w tym miesiącu</div>
+        <div style="font-size:32px;font-weight:800" id="totalPln">0 zł</div>
+        ${data.expenses.length ? `<canvas id="chartKasa" height="130"></canvas>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak wydatków</p>`}
+      </div>
+      <div id="listaWydatkow"></div>
+      <button onclick="openSheet('expense')" style="width:100%;background:var(--cardGreen);padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj wydatek</button>
+    </div>
+  </div>`;
+}
+
+function initStats(){
+  showStat('waga', document.querySelector('.s-tab'));
+}
+function showStat(id,el){
+  document.querySelectorAll('[id^="stat-"]').forEach(x=>x.style.display='none');
+  document.getElementById('stat-'+id).style.display='block';
+  document.querySelectorAll('.s-tab').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  if(id==='waga') rysujWage();
+  if(id==='aktywnosc') rysujSpacery();
+  if(id==='portfel') rysujPortfel();
+}
+function formatDateLabel(dateStr){
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  if(dateStr === today) return 'Dziś';
+  if(dateStr === yesterday) return 'Wczoraj';
+  const [y,m,d] = dateStr.split('-');
+  return `${d}.${m}.${y}`;
+}
+function rysujWage(){
+  const wagi = data.weights.slice(-30);
+  if(!wagi.length) return;
+  let ctx=document.getElementById('chartWaga'); 
+  if(window.cW) window.cW.destroy();
+  const datasets = [{ data: wagi, borderColor:'#0F3D2E', backgroundColor:'#D6E9D3', tension:0.4, fill:true }];
+  if (data.pet.targetWeight) {
+    const target = parseFloat(data.pet.targetWeight);
+    if (!isNaN(target)) datasets.push({ data:Array(wagi.length).fill(target), borderColor:'#E74C3C', borderDash:[5,5], pointRadius:0, fill:false });
+  }
+  window.cW=new Chart(ctx,{type:'line',data:{labels:wagi.map((_,i)=>i+1),datasets},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+  document.getElementById('listaWag').innerHTML = wagi.map((w,i)=>{
+    const dateStr = data.weightDates?.[data.weights.length - 30 + i] || new Date().toISOString().slice(0,10);
+    const label = formatDateLabel(dateStr);
+    return `<div class="card"><span>${label}</span><b style="float:right">${w} kg</b></div>`;
+  }).join('');
+  document.getElementById('wNow').textContent = data.pet.weight;
+}
+function rysujSpacery(){
+  const spacery = data.walks;
+  if(!spacery.length) return;
+  let ctx=document.getElementById('chartSpacer'); 
+  if(window.cS) window.cS.destroy();
+  window.cS=new Chart(ctx,{type:'bar',data:{labels:spacery.map((_,i)=>`Spacer ${i+1}`),datasets:[{data:spacery,backgroundColor:'#D6E9D3',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+  const sum = spacery.reduce((a,b)=>a+b,0);
+  document.getElementById('sumKm').textContent=sum.toFixed(1)+' km';
+  document.getElementById('avgMin').textContent='-- min';
+  document.getElementById('listaSpacerow').innerHTML=spacery.map((km,i)=>`<div class="card"><span>Spacer ${i+1}</span><span>${km} km</span></div>`).join('');
+}
+function rysujPortfel(){
+  const wydatki = data.expenses;
+  if(!wydatki.length) {
+    document.getElementById('totalPln').textContent='0 zł';
+    document.getElementById('listaWydatkow').innerHTML='';
+    return;
+  }
+  let total=wydatki.reduce((a,b)=>a+b.kwota,0);
+  document.getElementById('totalPln').textContent=total+' zł';
+  let cats={};
+  wydatki.forEach(e=>cats[e.cat]=(cats[e.cat]||0)+e.kwota);
+  const colors = {
+    'Karma': '#4CAF50',
+    'Weterynarz': '#2196F3',
+    'Zabawki': '#FF9800',
+    'Pielęgnacja': '#9C27B0',
+    'Inne': '#607D8B'
+  };
+  const labels = Object.keys(cats);
+  const values = Object.values(cats);
+  const backgroundColors = labels.map(l => colors[l] || '#999');
+  let ctx=document.getElementById('chartKasa');
+  if(window.cK) window.cK.destroy();
+  window.cK=new Chart(ctx,{
+    type:'doughnut',
+    data:{ labels: labels, datasets:[{ data: values, backgroundColor: backgroundColors, borderWidth: 2, borderColor: '#fff' }] },
+    options:{
+      plugins:{
+        legend:{ position:'bottom', labels:{ padding: 10, usePointStyle: true } },
+        tooltip:{ callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} zł` } }
+      }
+    }
+  });
+  document.getElementById('listaWydatkow').innerHTML = wydatki.map(e => `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;">
+      <span>${e.d} • ${e.cat}</span>
+      <b>${e.kwota} zł</b>
+    </div>
+  `).join('');
+}
+function dodajWage(){ 
+  let w=prompt('Podaj wagę kg np 16.4'); 
+  if(!w) return; 
+  const val = parseFloat(w);
+  if(isNaN(val)) return;
+  data.weights.push(val);
+  if(!data.weightDates) data.weightDates = [];
+  data.weightDates.push(new Date().toISOString().slice(0,10));
+  data.pet.weight = val.toFixed(1)+' kg';
+  save(); 
+  if(currentTab==='stats') {
+    renderTab('stats');
+    const wagaTab = document.querySelector('.s-tab[onclick*="waga"]');
+    if(wagaTab) showStat('waga', wagaTab);
+  } else {
+    updateHeader();
+  }
+}
+
+// ============ KALENDARZ ============
+let curM = new Date(); 
+let selDate = new Date().toISOString().slice(0,10);
+
+function renderCalendar(){
+  return `
+  <div class="cal-wrap">
+    <div class="cal-header">
+      <button onclick="zmienMies(-1)" style="background:var(--cardGreen);border:none;padding:8px 14px;border-radius:10px;font-weight:700">‹</button>
+      <div class="cal-month" id="calMonthLabel"></div>
+      <button onclick="zmienMies(1)" style="background:var(--cardGreen);border:none;padding:8px 14px;border-radius:10px;font-weight:700">›</button>
+    </div>
+    <div class="cal-grid"><div class="cal-day-name">Pn</div><div class="cal-day-name">Wt</div><div class="cal-day-name">Śr</div><div class="cal-day-name">Cz</div><div class="cal-day-name">Pt</div><div class="cal-day-name">So</div><div class="cal-day-name">Nd</div></div>
+    <div class="cal-grid" id="calGrid"></div>
+    
+    <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center">
+      <b id="selDateLabel">Wydarzenia</b>
+      <button onclick="dodajWizyte()" style="background:var(--primary);color:white;border:none;padding:8px 14px;border-radius:12px;font-weight:700">+ Wizyta</button>
+    </div>
+    <div id="dayEvents"></div>
+  </div>`;
+}
+function initCalendar(){
+  curM = new Date(selDate);
+  renderCal();
+}
+function renderCal(){
+  document.getElementById('calMonthLabel').textContent=curM.toLocaleDateString('pl-PL',{month:'long',year:'numeric'});
+  let y=curM.getFullYear(), m=curM.getMonth();
+  let first=new Date(y,m,1); 
+  let start=(first.getDay()+6)%7;
+  let days=new Date(y,m+1,0).getDate();
+  let grid=document.getElementById('calGrid'); 
+  grid.innerHTML='';
+  for(let i=0;i<start;i++) grid.innerHTML+='<div></div>';
+  let todayStr=new Date().toISOString().slice(0,10);
+  for(let d=1;d<=days;d++){
+    let iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let has = data.events.some(z=>z.date===iso) || (data.feedingPlan && data.feedingPlan.enabled);
+    let div=document.createElement('div'); 
+    div.className='cal-day'+(iso===todayStr?' today':'')+(has?' has':'')+(iso===selDate?' selected':'');
+    div.textContent=d;
+    if(has){let dot=document.createElement('div'); dot.className='dot'; div.appendChild(dot);}
+    div.onclick=()=>{selDate=iso; renderCal(); renderDay()};
+    grid.appendChild(div);
+  }
+  renderDay();
+}
+function renderDay(){
+  document.getElementById('selDateLabel').textContent=selDate;
+  let list=data.events.filter(z=>z.date===selDate);
+  let html = '';
+  if (data.feedingPlan && data.feedingPlan.enabled) {
+    const feedingTasks = generateFeedingTasksForDate(selDate);
+    feedingTasks.forEach(t => {
+      html += `<div class="event" style="border-left-color:#8FBF9A"><div><b>${t.title}</b><br><small>${t.sub}</small></div></div>`;
+    });
+    if (data.feedingPlan.waterReminder && data.feedingPlan.mealTimes.length > 0) {
+      const waterTime = subtractMinutes(data.feedingPlan.mealTimes[0], 30);
+      html += `<div class="event" style="border-left-color:#4A7C6F"><div><b>💧 Sprawdź wodę</b><br><small>${waterTime}</small></div></div>`;
+    }
+  }
+  list.forEach(z => {
+    html += `<div class="event ${z.type}"><div><b>${z.title}</b><br><small style="color:var(--secondary)">${z.sub}</small></div><div onclick="usunZad(${z.id})" style="cursor:pointer">🗑️</div></div>`;
+  });
+  let el=document.getElementById('dayEvents');
+  if(!html) el.innerHTML='<div style="color:var(--secondary);padding:12px;text-align:center">Brak wydarzeń tego dnia</div>';
+  else el.innerHTML=html;
+}
+function zmienMies(dir){curM.setMonth(curM.getMonth()+dir); renderCal();}
+function dodajWizyte(){
+  let t=prompt('Tytuł wizyty np WET Kontrola'); 
+  if(!t) return;
+  let g=prompt('Godzina np 14:00')||'10:00';
+  let type = confirm('Czy to wizyta weterynaryjna?') ? 'vet' : 'groom';
+  data.events.push({id:Date.now(),date:selDate,title:t,sub:g,type:type});
+  save(); 
+  renderCal();
+}
+function usunZad(id){data.events=data.events.filter(z=>z.id!==id); save(); renderCal();}
+
+// ============ PIELĘGNACJA ============
+function renderGrooming(){
+  const grooming = data.groomingLog || [];
+  const lastBath = grooming.filter(g=>g.type==='bath').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const lastTrim = grooming.filter(g=>g.type==='trim').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const lastNails = grooming.filter(g=>g.type==='nails').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const lastBrush = grooming.filter(g=>g.type==='brush').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const today = new Date().toISOString().slice(0,10);
+  function daysSince(dateStr){ if(!dateStr) return '—'; const diff = Math.floor((new Date(today)-new Date(dateStr))/(86400000)); return diff + ' dni temu'; }
+  
+  return `
+  <div class="section">
+    <div class="section-head"><h2>Pielęgnacja</h2></div>
+    <div class="card">
+      <div class="grooming-item"><span>🛁 Kąpiel</span><span>${daysSince(lastBath?.date)}</span></div>
+      <div class="grooming-item"><span>✂️ Strzyżenie</span><span>${daysSince(lastTrim?.date)}</span></div>
+      <div class="grooming-item"><span>💅 Pazurki</span><span>${daysSince(lastNails?.date)}</span></div>
+      <div class="grooming-item"><span>🪮 Czesanie</span><span>${daysSince(lastBrush?.date)}</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="btn-save" style="margin-top:0" onclick="addGrooming('bath')">🛁 Kąpiel</button>
+      <button class="btn-save" style="margin-top:0" onclick="addGrooming('trim')">✂️ Strzyżenie</button>
+      <button class="btn-save" style="margin-top:0" onclick="addGrooming('nails')">💅 Pazurki</button>
+      <button class="btn-save" style="margin-top:0" onclick="addGrooming('brush')">🪮 Czesanie</button>
+    </div>
+  </div>`;
+}
+function addGrooming(type) {
+  const today = new Date().toISOString().slice(0,10);
+  data.groomingLog = data.groomingLog || [];
+  data.groomingLog.push({ type, date: today });
+  save();
+  renderTab('grooming');
+}
+
+// ============ PROFIL ============
+function renderProfile(){
+  return `
+  <div class="section">
+    <div class="section-head"><h2>Profil</h2></div>
+    <div class="card">
+      <div class="profile-field"><label>Imię</label><input class="input" id="p_name" value="${data.pet.name}"></div>
+      <div class="profile-field"><label>Rasa</label>
+        <div class="autocomplete-wrapper">
+          <input class="input" id="p_breed" value="${data.pet.breed || ''}" autocomplete="off">
+          <div class="suggestions" id="p_breed_suggestions"></div>
+        </div>
+      </div>
+      <div class="profile-field"><label>Data urodzenia</label><input class="input" id="p_birth" type="date" value="${data.pet.birthDate || ''}"></div>
+      <div class="profile-field"><label>Waga (kg)</label><input class="input" id="p_weight" value="${data.pet.weight || ''}"></div>
+      <div class="profile-field"><label>Waga docelowa (kg)</label><input class="input" id="p_targetWeight" value="${data.pet.targetWeight || ''}" placeholder="np. 14"></div>
+      <div class="profile-field">
+        <label>Zdjęcie</label>
+        <button class="btn-save" style="margin-top:0" onclick="document.getElementById('profilePhotoInput').click()">📷 Zmień zdjęcie</button>
+        <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="openEditor(event.target.files[0], 'profile')">
+      </div>
+      <button class="btn-save" onclick="savePetFromProfile()">Zapisz zmiany</button>
+    </div>
+
+    <!-- SEKCJA PLAN KARMIENIA -->
+    <div class="card">
+      <h3 style="margin-bottom:12px">🍽️ Plan karmienia</h3>
+      <div class="profile-field">
+        <label>Liczba posiłków dziennie</label>
+        <select class="input" id="feeding_mealsPerDay" onchange="updateProfileMealTimeInputs()">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+      <div class="profile-field">
+        <label>Waga jednego posiłku (g)</label>
+        <input class="input" id="feeding_mealWeight" type="number" placeholder="np. 150">
+      </div>
+      <div class="profile-field">
+        <label>Godziny posiłków</label>
+        <div id="profile_mealTimesContainer"></div>
+      </div>
+      <div class="profile-field">
+        <label class="flex items-center gap-2" style="margin-bottom:0">
+          <input type="checkbox" id="feeding_waterReminder" style="width:auto"> Przypominaj rano o wodzie
+        </label>
+      </div>
+      <button class="btn-save" onclick="saveFeedingPlan()">Zapisz plan</button>
+    </div>
+
+    <button class="sos-btn" onclick="openSheet('sos')">🚨 SOS Zaginął pies</button>
+    <button class="input" style="text-align:center;background:transparent;border:none;color:red;font-weight:700;margin-top:8px" onclick="resetApp()">🗑️ Resetuj aplikację</button>
+  </div>`;
+  attachBreedAutocomplete('p_breed', 'p_breed_suggestions');
+}
+
+function populateFeedingPlanFields() {
+  const plan = data.feedingPlan;
+  if (!plan) return;
+  document.getElementById('feeding_mealsPerDay').value = plan.mealsPerDay;
+  document.getElementById('feeding_mealWeight').value = plan.mealWeight || '';
+  document.getElementById('feeding_waterReminder').checked = plan.waterReminder;
+  updateProfileMealTimeInputs();
+  const times = plan.mealTimes || [];
+  times.forEach((t, i) => {
+    const input = document.getElementById(`profile_mealTime_${i}`);
+    if (input) input.value = t;
+  });
+}
+function updateProfileMealTimeInputs() {
+  const count = parseInt(document.getElementById('feeding_mealsPerDay').value) || 2;
+  const container = document.getElementById('profile_mealTimesContainer');
+  if (!container) return;
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    const defaultTime = i === 0 ? '07:00' : (i === 1 ? '18:00' : '12:00');
+    html += `<input class="input" type="time" id="profile_mealTime_${i}" value="${defaultTime}">`;
+  }
+  container.innerHTML = html;
+  const plan = data.feedingPlan;
+  if (plan && plan.mealTimes) {
+    plan.mealTimes.forEach((t, i) => {
+      const input = document.getElementById(`profile_mealTime_${i}`);
+      if (input) input.value = t;
+    });
+  }
+}
+function saveFeedingPlan() {
+  const mealsPerDay = parseInt(document.getElementById('feeding_mealsPerDay').value) || 2;
+  const mealWeight = document.getElementById('feeding_mealWeight').value.trim();
+  const mealTimes = [];
+  for (let i = 0; i < mealsPerDay; i++) {
+    const input = document.getElementById(`profile_mealTime_${i}`);
+    if (input) mealTimes.push(input.value);
+  }
+  const waterReminder = document.getElementById('feeding_waterReminder').checked;
+  
+  data.feedingPlan = {
+    enabled: true,
+    mealsPerDay,
+    mealWeight,
+    mealTimes,
+    waterReminder
+  };
+  
+  const today = new Date().toISOString().slice(0,10);
+  data.tasks = data.tasks.filter(t => !((t.type === 'feeding' || t.type === 'water') && t.date === today));
+  const feedingTasks = generateFeedingTasksForDate(today);
+  data.tasks = data.tasks.concat(feedingTasks);
+  if (waterReminder && mealTimes.length > 0) {
+    const waterTime = subtractMinutes(mealTimes[0], 30);
+    data.tasks.push({
+      id: generateUniqueId(),
+      type:'water',
+      title:'Sprawdź wodę',
+      sub:'Wymień na świeżą',
+      icon:'💧',
+      done:false,
+      date:today,
+      time: waterTime
+    });
+  }
+  
+  save();
+  renderTab('profile');
+}
+function savePetFromProfile(){
+  const oldWeight = data.pet.weight;
+  const newWeightVal = document.getElementById('p_weight').value.trim();
+  data.pet.name=document.getElementById('p_name').value;
+  data.pet.breed=document.getElementById('p_breed').value;
+  data.pet.birthDate=document.getElementById('p_birth').value;
+  data.pet.age = data.pet.birthDate ? calculateAge(data.pet.birthDate) : 'Wiek nieznany';
+  data.pet.weight = newWeightVal;
+  data.pet.targetWeight = document.getElementById('p_targetWeight').value.trim();
+  if (newWeightVal && newWeightVal !== oldWeight) {
+    const val = parseFloat(newWeightVal);
+    if (!isNaN(val)) {
+      data.weights.push(val);
+      data.weightDates.push(new Date().toISOString().slice(0,10));
+    }
+  }
+  save(); 
+  updateHeader(); 
+  renderTab('profile');
+}
+function resetApp(){
+  if(confirm('Czy na pewno chcesz usunąć wszystkie dane?')) {
+    localStorage.removeItem('mypuppy_v17');
+    location.reload();
+  }
+}
+
+// ============ MODALE OGÓLNE ============
+function openSheet(type){
+ let html='';
+ if(type=='feeding'){html=`<h3>🍖 Dodaj karmienie</h3><input class="input" id="f_time" type="time" value="`+new Date().toTimeString().slice(0,5)+`"><input class="input" id="f_amount" placeholder="Ilość np 120g"><select class="input" id="f_type"><option>Sucha</option><option>Mokra</option><option>BARF</option></select><button class="btn-save" onclick="saveFeeding()">Zapisz</button>`;}
+ else if(type=='walk'){html=`<h3>🦮 Dodaj spacer</h3><input class="input" id="w_km" placeholder="km" type="number" step="0.1"><input class="input" id="w_min" placeholder="min" type="number"><button class="btn-save" onclick="saveWalk()">Zapisz</button>`;}
+ else if(type=='weight'){html=`<h3>⚖️ Dodaj wagę</h3><input class="input" id="w_val" placeholder="kg np 16.4" type="number" step="0.1"><button class="btn-save" onclick="saveWeight()">Zapisz</button>`;}
+ else if(type=='medicine'){html=`<h3>💊 Dodaj lek</h3><input class="input" id="m_name" placeholder="Nazwa"><input class="input" id="m_dose" placeholder="Dawka"><button class="btn-save" onclick="saveMed()">Zapisz</button>`;}
+ else if(type=='expense'){
+   html=`<h3>💰 Dodaj wydatek</h3>
+   <select class="input" id="exp_cat"><option>Karma</option><option>Weterynarz</option><option>Zabawki</option><option>Pielęgnacja</option><option>Inne</option></select>
+   <input class="input" id="exp_amount" type="number" placeholder="Kwota zł">
+   <button class="btn-save" onclick="saveExpense()">Zapisz</button>`;
+ }
+ else if(type=='sos'){html=`<h3>🚨 Zaginął pies</h3><input class="input" id="sos_phone" placeholder="Twój numer telefonu"><input class="input" id="sos_date" type="date" value="${new Date().toISOString().slice(0,10)}"><input class="input" id="sos_note" placeholder="Dodatkowe informacje"><button class="btn-save" onclick="generateSOSPoster()">Generuj plakat</button>`;}
+ document.getElementById('sheetContent').innerHTML=html;
+ document.getElementById('modal').classList.add('open');
+}
+function closeSheet(){document.getElementById('modal').classList.remove('open')}
+function saveFeeding(){
+  let t=document.getElementById('f_time').value;
+  let a=document.getElementById('f_amount').value;
+  data.tasks.push({id:Date.now(),type:'feeding',title:'Karmienie',sub:t+' • '+(a||'Gotowe'),icon:'🍖',done:true,date:new Date().toISOString().slice(0,10)});
+  save();renderTab('dashboard');closeSheet();
+}
+function saveWalk(){
+  let km=document.getElementById('w_km').value||'0';
+  let min=document.getElementById('w_min').value||'0';
+  data.walks.push(parseFloat(km));
+  data.tasks.push({id:Date.now(),type:'walk',title:'Spacer',sub:km+' km • '+min+' min',icon:'🦮',done:true,date:new Date().toISOString().slice(0,10)});
+  save();renderTab('dashboard');closeSheet();
+}
+function saveWeight(){
+  let v=parseFloat(document.getElementById('w_val').value);
+  if(!v)return;
+  data.weights.push(v);
+  if(!data.weightDates) data.weightDates=[];
+  data.weightDates.push(new Date().toISOString().slice(0,10));
+  data.pet.weight=v.toFixed(1)+' kg';
+  save();renderTab('dashboard');updateHeader();closeSheet();
+}
+function saveMed(){
+  let n=document.getElementById('m_name').value;
+  data.tasks.push({id:Date.now(),type:'medicine',title:n||'Lek',sub:'Dodano',icon:'💊',done:false,date:new Date().toISOString().slice(0,10)});
+  save();renderTab('dashboard');closeSheet();
+}
+function saveExpense(){
+  let cat=document.getElementById('exp_cat').value;
+  let amount=parseFloat(document.getElementById('exp_amount').value);
+  if(!amount) return;
+  data.expenses.push({cat, kwota:amount, d:new Date().toISOString().slice(0,10)});
+  save();
+  closeSheet();
+  if(currentTab==='stats') {
+    renderTab('stats');
+    const portfelTab = document.querySelector('.s-tab[onclick*="portfel"]');
+    if(portfelTab) showStat('portfel', portfelTab);
+  }
+}
+
+// ============ SOS ============
+function generateSOSPoster(){
+  const phone = document.getElementById('sos_phone').value || '---';
+  const date = document.getElementById('sos_date').value;
+  const note = document.getElementById('sos_note').value || '---';
+  const name = data.pet.name;
+  const breed = data.pet.breed || 'Nieznana';
+  const img = data.pet.img || '';
+  const htmlContent = `<!DOCTYPE html><html><head><title>Zaginął ${name}</title><style>
+    body{font-family:sans-serif;background:#FFFBF2;color:#0F3D2E;text-align:center;padding:20px}
+    .poster{max-width:500px;margin:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+    img{width:100%;max-height:300px;object-fit:contain;border-radius:12px}
+    h1{font-size:2em;margin:10px 0}
+    .info{font-size:1.2em;margin:8px 0}
+  </style></head><body><div class="poster">
+    <h1>🚨 ZAGINĄŁ PIES</h1>
+    ${img ? `<img src="${img}" alt="${name}">` : '<div style="height:200px;background:#eee;border-radius:12px"></div>'}
+    <div class="info"><strong>${name}</strong></div>
+    <div class="info">${breed}</div>
+    <div class="info">Data zaginięcia: ${date}</div>
+    <div class="info">Notatka: ${note}</div>
+    <div class="info" style="font-size:1.5em;font-weight:bold">Kontakt: ${phone}</div>
+  </div></body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(htmlContent);
+  w.document.close();
+  closeSheet();
+}
+
+// ============ POWIADOMIENIA ============
+function openNotifications(){
+  const today = new Date().toISOString().slice(0,10);
+  const todayTasks = data.tasks.filter(t => t.date === today && !t.done);
+  todayTasks.sort((a,b) => (a.time || '23:59').localeCompare(b.time || '23:59'));
+  
+  let tasksHtml = todayTasks.length ? todayTasks.map(t => `
+    <div class="card" style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <b>${t.icon} ${t.title}</b><br>
+          <small style="color:var(--secondary)">${t.sub}</small>
+        </div>
+        <span style="font-size:12px;color:var(--secondary)">${t.time || ''}</span>
+      </div>
+    </div>
+  `).join('') : '<div class="card" style="text-align:center;color:var(--secondary)">Brak dzisiejszych zadań</div>';
+  
+  const html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">🔔 Powiadomienia</h3>
+      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    </div>
+    ${tasksHtml}
+  `;
+  document.getElementById('sheetContent').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+// ============ EDYTOR ZDJĘĆ ============
+let editorImageData = null;
+let editorCallbackType = null;
+let editorY = 50;
+let editorZoom = 1;
+
+function openEditor(file, type) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    editorImageData = e.target.result;
+    editorCallbackType = type;
+    editorY = 50;
+    editorZoom = 1;
+    document.getElementById('editorImage').src = editorImageData;
+    document.getElementById('editorSlider').value = 50;
+    document.getElementById('editorZoomSlider').value = 1;
+    updateEditorPosition();
+    document.getElementById('editorModal').classList.add('open');
+  };
+  reader.readAsDataURL(file);
+}
+function closeEditor() {
+  document.getElementById('editorModal').classList.remove('open');
+}
+function updateEditorPosition() {
+  const img = document.getElementById('editorImage');
+  img.style.objectPosition = `50% ${editorY}%`;
+  img.style.transform = `scale(${editorZoom})`;
+}
+document.getElementById('editorSlider').addEventListener('input', function() {
+  editorY = parseInt(this.value);
+  updateEditorPosition();
+});
+document.getElementById('editorZoomSlider').addEventListener('input', function() {
+  editorZoom = parseFloat(this.value);
+  updateEditorPosition();
+});
+let isDraggingEditor = false;
+let startDragY = 0;
+const editorPreview = document.getElementById('editorPreview');
+editorPreview.addEventListener('mousedown', startEditorDrag);
+editorPreview.addEventListener('touchstart', startEditorDrag);
+document.addEventListener('mousemove', moveEditorDrag);
+document.addEventListener('touchmove', moveEditorDrag);
+document.addEventListener('mouseup', endEditorDrag);
+document.addEventListener('touchend', endEditorDrag);
+function startEditorDrag(e) {
+  isDraggingEditor = true;
+  startDragY = (e.clientY || e.touches[0].clientY);
+  editorPreview.style.cursor = 'grabbing';
+}
+function moveEditorDrag(e) {
+  if (!isDraggingEditor) return;
+  e.preventDefault();
+  const clientY = e.clientY || e.touches[0].clientY;
+  const deltaY = clientY - startDragY;
+  const rect = editorPreview.getBoundingClientRect();
+  const percentChange = (deltaY / rect.height) * 100;
+  editorY = Math.max(0, Math.min(100, editorY + percentChange));
+  startDragY = clientY;
+  document.getElementById('editorSlider').value = Math.round(editorY);
+  updateEditorPosition();
+}
+function endEditorDrag() {
+  isDraggingEditor = false;
+  editorPreview.style.cursor = 'grab';
+}
+function saveEditedPhoto() {
+  if (editorCallbackType === 'onboarding') {
+    onboardingPhotoData = editorImageData;
+    onboardingPhotoPosition = `50% ${editorY}%`;
+    onboardingPhotoZoom = editorZoom;
+    const preview = document.getElementById('onboardingPhotoPreview');
+    preview.src = editorImageData;
+    preview.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+  } else if (editorCallbackType === 'profile') {
+    data.pet.img = editorImageData;
+    data.pet.imgPosition = `50% ${editorY}%`;
+    data.pet.imgZoom = editorZoom;
+    save();
+    updateHeader();
+  }
+  closeEditor();
+}
+</script>
+</body>
+</html>
