@@ -560,14 +560,11 @@ function renderStats(){
       <div class="s-tab" id="stat-tab-portfel" onclick="showStat('portfel',this)">Portfel</div>
     </div>
     <div id="stat-waga">
-      <div class="card green">
-        <div class="h2">Waga ${data.pet.name} <span class="small" style="float:right">ostatnie 30 dni</span></div>
-        ${data.weights.length ? `<canvas id="chartWaga" height="160"></canvas>
-        <div style="display:flex;justify-content:space-between;margin-top:10px">
-          <span class="small">Teraz: <b id="wNow">${data.pet.weight}</b></span>
-          ${data.pet.targetWeight ? `<span class="small">Cel: <b>${data.pet.targetWeight}</b></span>` : ''}
-        </div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak danych o wadze</p>`}
-      </div>
+      <div class="waga-card">
+  <div style="display:flex;justify-content:space-between"><h2 style="font-size:22px">Waga</h2><span style="color:var(--secondary);font-size:13px">ostatnie 30 dni</span></div>
+  ${data.weights.length ? `<canvas id="chartWaga" height="120"></canvas>
+  <div style="text-align:right;margin-top:8px;font-weight:700;color:var(--secondary);font-size:14px">${data.pet.weight}${data.pet.targetWeight ? ' • Cel: ' + data.pet.targetWeight : ''}</div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak pomiarów wagi. Dodaj pierwszą wagę.</p>`}
+</div>
       <div id="listaWag"></div>
       <button onclick="openSheet('weight')" id="btn-add-weight" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj pomiar</button>
     </div>
@@ -594,8 +591,7 @@ function renderStats(){
         ${data.expenses.length ? `<canvas id="chartKasa" height="130"></canvas>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak wydatków</p>`}
       </div>
       <div id="listaWydatkow"></div>
-      <button onclick="openSheet('expense')" id="btn-add-expense" style="width:100%;background:var(--cardGreen);padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj wydatek</button>
-    </div>
+      <button onclick="openSheet('expense')" id="btn-add-expense" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj wydatek</button>
   </div>`;
 }
 
@@ -813,13 +809,13 @@ function renderGrooming(){
       <div class="grooming-item"><span>🛁 Kąpiel</span><span>${daysSince(lastBath?.date)}</span></div>
       <div class="grooming-item"><span>✂️ Strzyżenie</span><span>${daysSince(lastTrim?.date)}</span></div>
       <div class="grooming-item"><span>💅 Pazurki</span><span>${daysSince(lastNails?.date)}</span></div>
-      <div class="grooming-item"><span>🪮 Czesanie</span><span>${daysSince(lastBrush?.date)}</span></div>
+      <div class="grooming-item"><span>💈 Czesanie</span><span>${daysSince(lastBrush?.date)}</span></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <button class="btn-save" id="btn-groom-bath" style="margin-top:0" onclick="addGrooming('bath')">🛁 Kąpiel</button>
       <button class="btn-save" id="btn-groom-trim" style="margin-top:0" onclick="addGrooming('trim')">✂️ Strzyżenie</button>
       <button class="btn-save" id="btn-groom-nails" style="margin-top:0" onclick="addGrooming('nails')">💅 Pazurki</button>
-      <button class="btn-save" id="btn-groom-brush" style="margin-top:0" onclick="addGrooming('brush')">🪮 Czesanie</button>
+      <button class="btn-save" id="btn-groom-brush" style="margin-top:0" onclick="addGrooming('brush')">💈 Czesanie</button>
     </div>
   </div>`;
 }
