@@ -645,7 +645,6 @@ function rysujWage(){
     const label = formatDateLabel(dateStr);
     return `<div class="card"><span>${label}</span><b style="float:right">${w} kg</b></div>`;
   }).join('');
-  document.getElementById('wNow').textContent = data.pet.weight;
 }
 function rysujSpacery(){
   let spacery = data.walks.map(w => (typeof w === 'number') ? { km: w, min: 0 } : w);
