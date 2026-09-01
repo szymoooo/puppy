@@ -572,7 +572,7 @@ function renderStats(){
         </div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak danych o wadze</p>`}
       </div>
       <div id="listaWag"></div>
-      <button onclick="dodajWage()" id="btn-add-weight" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj pomiar</button>
+      <button onclick="openSheet('weight')" id="btn-add-weight" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj pomiar</button>
     </div>
     <div id="stat-aktywnosc" style="display:none">
       <div class="card">
@@ -687,25 +687,6 @@ function rysujPortfel(){
       <b>${e.kwota} zł</b>
     </div>
   `).join('');
-}
-function dodajWage(){ 
-  let w=prompt('Podaj wagę kg np 16.4'); 
-  if(!w) return; 
-  const val = parseFloat(w);
-  if(isNaN(val)) return;
-  data.weights.push(val);
-  if(!data.weightDates) data.weightDates = [];
-  data.weightDates.push(new Date().toISOString().slice(0,10));
-  data.pet.weight = val.toFixed(1)+' kg';
-  save(); 
-  logAction(`Dodano pomiar wagi: ${val} kg`);
-  if(currentTab==='stats') {
-    renderTab('stats');
-    const wagaTab = document.querySelector('.s-tab[onclick*="waga"]');
-    if(wagaTab) showStat('waga', wagaTab);
-  } else {
-    updateHeader();
-  }
 }
 
 // ============ KALENDARZ ============
@@ -988,22 +969,66 @@ function resetApp(){
 
 // ============ MODALE OGÓLNE ============
 function openSheet(type){
- logAction(`Otworzono sheet: ${type}`);
- let html='';
- if(type=='feeding'){html=`<h3>🍖 Dodaj karmienie</h3><input class="input" id="f_time" type="time" value="`+new Date().toTimeString().slice(0,5)+`"><input class="input" id="f_amount" placeholder="Ilość np 120g"><select class="input" id="f_type"><option>Sucha</option><option>Mokra</option><option>BARF</option></select><button class="btn-save" onclick="saveFeeding()">Zapisz</button>`;}
- else if(type=='walk'){html=`<h3>🦮 Dodaj spacer</h3><input class="input" id="w_km" placeholder="km" type="number" step="0.1"><input class="input" id="w_min" placeholder="min" type="number"><button class="btn-save" onclick="saveWalk()">Zapisz</button>`;}
- else if(type=='weight'){html=`<h3>⚖️ Dodaj wagę</h3><input class="input" id="w_val" placeholder="kg np 16.4" type="number" step="0.1"><button class="btn-save" onclick="saveWeight()">Zapisz</button>`;}
- else if(type=='medicine'){html=`<h3>💊 Dodaj lek</h3><input class="input" id="m_name" placeholder="Nazwa"><input class="input" id="m_dose" placeholder="Dawka"><button class="btn-save" onclick="saveMed()">Zapisz</button>`;}
- else if(type=='expense'){
-   html=`<h3>💰 Dodaj wydatek</h3>
-   <select class="input" id="exp_cat"><option>Karma</option><option>Weterynarz</option><option>Zabawki</option><option>Pielęgnacja</option><option>Inne</option></select>
-   <input class="input" id="exp_amount" type="number" placeholder="Kwota zł">
-   <button class="btn-save" onclick="saveExpense()">Zapisz</button>`;
- }
- else if(type=='sos'){html=`<h3>🚨 Zaginął pies</h3><input class="input" id="sos_phone" placeholder="Twój numer telefonu"><input class="input" id="sos_date" type="date" value="${new Date().toISOString().slice(0,10)}"><input class="input" id="sos_note" placeholder="Dodatkowe informacje"><button class="btn-save" onclick="generateSOSPoster()">Generuj plakat</button>`;}
- document.getElementById('sheetContent').innerHTML=html;
- document.getElementById('modal').classList.add('open');
- attachInputLogging();
+  logAction(`Otworzono sheet: ${type}`);
+  let html='';
+  if(type=='feeding'){
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">🍖 Dodaj karmienie</h3>
+      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    </div>
+    <input class="input" id="f_time" type="time" value="`+new Date().toTimeString().slice(0,5)+`">
+    <input class="input" id="f_amount" placeholder="Ilość np 120g">
+    <select class="input" id="f_type"><option>Sucha</option><option>Mokra</option><option>BARF</option></select>
+    <button class="btn-save" onclick="saveFeeding()">Zapisz</button>`;
+  }
+  else if(type=='walk'){
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">🦮 Dodaj spacer</h3>
+      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    </div>
+    <input class="input" id="w_km" placeholder="km" type="number" step="0.1">
+    <input class="input" id="w_min" placeholder="min" type="number">
+    <button class="btn-save" onclick="saveWalk()">Zapisz</button>`;
+  }
+  else if(type=='weight'){
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">⚖️ Dodaj wagę</h3>
+      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    </div>
+    <input class="input" id="w_val" placeholder="kg np 16.4" type="number" step="0.1">
+    <button class="btn-save" onclick="saveWeightFromModal()">Zapisz</button>`;
+  }
+  else if(type=='medicine'){
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">💊 Dodaj lek</h3>
+      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    </div>
+    <input class="input" id="m_name" placeholder="Nazwa">
+    <input class="input" id="m_dose" placeholder="Dawka">
+    <button class="btn-save" onclick="saveMed()">Zapisz</button>`;
+  }
+  else if(type=='expense'){
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">💰 Dodaj wydatek</h3>
+      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    </div>
+    <select class="input" id="exp_cat"><option>Karma</option><option>Weterynarz</option><option>Zabawki</option><option>Pielęgnacja</option><option>Inne</option></select>
+    <input class="input" id="exp_amount" type="number" placeholder="Kwota zł">
+    <button class="btn-save" onclick="saveExpense()">Zapisz</button>`;
+  }
+  else if(type=='sos'){
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">🚨 Zaginął pies</h3>
+      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    </div>
+    <input class="input" id="sos_phone" placeholder="Twój numer telefonu">
+    <input class="input" id="sos_date" type="date" value="${new Date().toISOString().slice(0,10)}">
+    <input class="input" id="sos_note" placeholder="Dodatkowe informacje">
+    <button class="btn-save" onclick="generateSOSPoster()">Generuj plakat</button>`;
+  }
+  document.getElementById('sheetContent').innerHTML=html;
+  document.getElementById('modal').classList.add('open');
+  attachInputLogging();
 }
 function closeSheet(){document.getElementById('modal').classList.remove('open')}
 function saveFeeding(){
@@ -1012,7 +1037,8 @@ function saveFeeding(){
   data.tasks.push({id:Date.now(),type:'feeding',title:'Karmienie',sub:t+' • '+(a||'Gotowe'),icon:'🍖',done:true,date:new Date().toISOString().slice(0,10)});
   save();
   logAction(`Dodano karmienie: ${t}, ${a}`);
-  renderTab('dashboard');closeSheet();
+  closeSheet();
+  if(currentTab==='stats') renderTab('stats'); else renderTab('dashboard');
 }
 function saveWalk(){
   let km=document.getElementById('w_km').value||'0';
@@ -1021,25 +1047,35 @@ function saveWalk(){
   data.tasks.push({id:Date.now(),type:'walk',title:'Spacer',sub:km+' km • '+min+' min',icon:'🦮',done:true,date:new Date().toISOString().slice(0,10)});
   save();
   logAction(`Dodano spacer: ${km} km, ${min} min`);
-  renderTab('dashboard');closeSheet();
+  closeSheet();
+  if(currentTab==='stats') renderTab('stats'); else renderTab('dashboard');
 }
-function saveWeight(){
+function saveWeightFromModal(){
   let v=parseFloat(document.getElementById('w_val').value);
-  if(!v)return;
+  if(!v) return;
   data.weights.push(v);
   if(!data.weightDates) data.weightDates=[];
   data.weightDates.push(new Date().toISOString().slice(0,10));
   data.pet.weight=v.toFixed(1)+' kg';
   save();
   logAction(`Dodano wagę: ${v} kg`);
-  renderTab('dashboard');updateHeader();closeSheet();
+  closeSheet();
+  if(currentTab==='stats') {
+    renderTab('stats');
+    const wagaTab = document.querySelector('.s-tab[onclick*="waga"]');
+    if(wagaTab) showStat('waga', wagaTab);
+  } else {
+    renderTab('dashboard');
+    updateHeader();
+  }
 }
 function saveMed(){
   let n=document.getElementById('m_name').value;
   data.tasks.push({id:Date.now(),type:'medicine',title:n||'Lek',sub:'Dodano',icon:'💊',done:false,date:new Date().toISOString().slice(0,10)});
   save();
   logAction(`Dodano lek: ${n}`);
-  renderTab('dashboard');closeSheet();
+  closeSheet();
+  if(currentTab==='stats') renderTab('stats'); else renderTab('dashboard');
 }
 function saveExpense(){
   let cat=document.getElementById('exp_cat').value;
@@ -1053,6 +1089,8 @@ function saveExpense(){
     renderTab('stats');
     const portfelTab = document.querySelector('.s-tab[onclick*="portfel"]');
     if(portfelTab) showStat('portfel', portfelTab);
+  } else {
+    renderTab('dashboard');
   }
 }
 
