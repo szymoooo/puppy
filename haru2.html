@@ -632,50 +632,117 @@ function rysujSpacery(){
   let spacery = data.walks.map(w => (typeof w === 'number') ? { km: w, min: 0 } : w);
   if(!spacery.length) return;
   spacery = spacery.slice(-aktywnoscRange);
-  let ctx=document.getElementById('chartSpacer'); 
+  let ctx = document.getElementById('chartSpacer'); 
   if(window.cS) window.cS.destroy();
-  window.cS=new Chart(ctx,{type:'bar',data:{labels:spacery.map((_,i)=>`Spacer ${i+1}`),datasets:[{data:spacery.map(s=>s.km),backgroundColor:'#D6E9D3',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
-  const sumKm = spacery.reduce((a,b)=>a+b.km,0);
-  document.getElementById('sumKm').textContent = sumKm.toFixed(1)+' km';
+  window.cS = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: spacery.map((_, i) => `Spacer ${i+1}`),
+      datasets: [{
+        data: spacery.map(s => s.km),
+        backgroundColor: '#D6E9D3',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { display: false }
+      }
+    }
+  });
+  
+  const sumKm = spacery.reduce((a, b) => a + b.km, 0);
+  document.getElementById('sumKm').textContent = sumKm.toFixed(1) + ' km';
+  
   const withTime = spacery.filter(s => s.min > 0);
   if (withTime.length > 0) {
-    const sumMin = withTime.reduce((a,b)=>a+b.min,0);
+    const sumMin = withTime.reduce((a, b) => a + b.min, 0);
     const avg = Math.round(sumMin / withTime.length);
     document.getElementById('avgMin').textContent = avg + ' min';
   } else {
     document.getElementById('avgMin').textContent = '-- min';
   }
-  document.getElementById('listaSpacerow').innerHTML = spacery.map((s,i)=>{
+  
+  document.getElementById('listaSpacerow').innerHTML = spacery.map((s, i) => {
     let opis = `Spacer ${i+1} • ${s.km} km`;
     if (s.min > 0) opis += `, ${s.min} min`;
     return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;"><span>${opis}</span></div>`;
   }).join('');
 }
+
 function setAktywnoscRange(days){
   aktywnoscRange = days;
   renderTab('stats');
   const aktywnoscTab = document.querySelector('.s-tab[onclick*="aktywnosc"]');
   if(aktywnoscTab) showStat('aktywnosc', aktywnoscTab);
 }
+
 function rysujPortfel(){
   const wydatki = data.expenses;
   if(!wydatki.length) {
-    document.getElementById('totalPln').textContent='0 zł';
-    document.getElementById('listaWydatkow').innerHTML='';
+    document.getElementById('totalPln').textContent = '0 zł';
+    document.getElementById('listaWydatkow').innerHTML = '';
     return;
   }
-  let total=wydatki.reduce((a,b)=>a+b.kwota,0);
-  document.getElementById('totalPln').textContent=total+' zł';
-  let cats={};
-  wydatki.forEach(e=>cats[e.cat]=(cats[e.cat]||0)+e.kwota);
-  const colors = { 'Karma': '#4CAF50', 'Weterynarz': '#2196F3', 'Zabawki': '#FF9800', 'Pielęgnacja': '#9C27B0', 'Inne': '#607D8B' };
+  
+  let total = wydatki.reduce((a, b) => a + b.kwota, 0);
+  document.getElementById('totalPln').textContent = total + ' zł';
+  
+  let cats = {};
+  wydatki.forEach(e => { cats[e.cat] = (cats[e.cat] || 0) + e.kwota; });
+  
+  const colors = {
+    'Karma': '#4CAF50',
+    'Weterynarz': '#2196F3',
+    'Zabawki': '#FF9800',
+    'Pielęgnacja': '#9C27B0',
+    'Inne': '#607D8B'
+  };
+  
   const labels = Object.keys(cats);
   const values = Object.values(cats);
   const backgroundColors = labels.map(l => colors[l] || '#999');
-  let ctx=document.getElementById('chartKasa');
+  
+  let ctx = document.getElementById('chartKasa');
   if(window.cK) window.cK.destroy();
-  window.cK=new Chart(ctx,{ type:'doughnut', data:{ labels: labels, datasets:[{ data: values, backgroundColor: backgroundColors, borderWidth: 2, borderColor: '#fff' }] }, options:{ plugins:{ legend:{ position:'bottom', labels:{ padding: 10, usePointStyle: true } }, tooltip:{ callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} zł` } } } });
-  document.getElementById('listaWydatkow').innerHTML = wydatki.map(e => `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;"><span>${e.d} • ${e.cat}</span><b>${e.kwota} zł</b></div>`).join('');
+  
+  window.cK = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: backgroundColors,
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 10,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${ctx.raw} zł`
+          }
+        }
+      }
+    }
+  });
+  
+  document.getElementById('listaWydatkow').innerHTML = wydatki.map(e => `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;">
+      <span>${e.d} • ${e.cat}</span>
+      <b>${e.kwota} zł</b>
+    </div>
+  `).join('');
 }
 
 // ============ KALENDARZ ============
