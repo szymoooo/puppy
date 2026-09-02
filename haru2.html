@@ -18,8 +18,9 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
 .section{padding:16px}
 .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .section-head h2{font-size:26px;font-weight:800}
-.chip{background:var(--cardGreen);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;display:flex;gap:6px}
+.chip{background:var(--cardGreen);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;display:flex;gap:6px;cursor:pointer}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.scrollable-tasks{max-height:360px;overflow-y:auto;padding-right:4px}
 .task-card{background:var(--cardBeige);border-radius:18px;padding:16px;cursor:pointer;position:relative;border:1.5px solid transparent}
 .task-card.done{background:var(--cardGreen);border-color:var(--accent)}
 .task-card h3{font-size:16px;margin-bottom:4px}
@@ -137,7 +138,7 @@ body{background:var(--bg);color:var(--primary);max-width:480px;margin:0 auto;min
 </div>
 
 <script>
-  // ============ LISTA RAS ============
+// ============ LISTA RAS ============
 const dogBreeds = [
   "Beagle","Bokser","Border collie","Bulldog francuski","Cane corso",
   "Cavalier king charles spaniel","Chart afgański","Chart polski","Chihuahua",
@@ -190,27 +191,15 @@ let data = JSON.parse(localStorage.getItem('mypuppy_v17'));
 let currentTab='dashboard';
 let onboardingStep = 1;
 let aktywnoscRange = 30;
+let selectedEventType = 'other';
 
-// Unikalne ID
 let taskIdCounter = Date.now();
-function generateUniqueId() {
-  return ++taskIdCounter;
-}
+function generateUniqueId() { return ++taskIdCounter; }
 
-// Logowanie
-function logAction(message) {
-  console.log(`[MyPuppy] ${new Date().toLocaleTimeString()} - ${message}`);
-}
+function logAction(message) { console.log(`[MyPuppy] ${new Date().toLocaleTimeString()} - ${message}`); }
+function save(){ localStorage.setItem('mypuppy_v17',JSON.stringify(data)); }
 
-function save(){localStorage.setItem('mypuppy_v17',JSON.stringify(data));}
-
-// Inicjalizacja
-if (!data || !data.pet) {
-  showOnboarding(1);
-} else {
-  ensureDailyTasks();
-  showApp();
-}
+if (!data || !data.pet) { showOnboarding(1); } else { ensureDailyTasks(); showApp(); }
 
 function ensureDailyTasks(){
   const today = new Date().toISOString().slice(0,10);
@@ -223,16 +212,7 @@ function ensureDailyTasks(){
   if (!hasWater && data.feedingPlan?.waterReminder) {
     const firstMealTime = data.feedingPlan.mealTimes?.[0] || '07:00';
     const waterTime = subtractMinutes(firstMealTime, 30);
-    data.tasks.push({
-      id: generateUniqueId(),
-      type:'water',
-      title:'Sprawdź wodę',
-      sub:'Wymień na świeżą',
-      icon:'💧',
-      done:false,
-      date:today,
-      time: waterTime
-    });
+    data.tasks.push({ id: generateUniqueId(), type:'water', title:'Sprawdź wodę', sub:'Wymień na świeżą', icon:'💧', done:false, date:today, time: waterTime });
   }
   save();
 }
@@ -308,10 +288,7 @@ function showOnboarding(step) {
         <div class="onboarding-sub">Ustal harmonogram posiłków</div>
         <label>Ile posiłków dziennie?</label>
         <select class="input" id="mealsPerDay" onchange="updateMealTimeInputs()">
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="1">1</option>
+          <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="1">1</option>
         </select>
         <label>Waga jednego posiłku (g) – opcjonalnie</label>
         <input class="input" id="mealWeight" type="number" placeholder="np. 150">
@@ -368,41 +345,26 @@ function saveOnboarding() {
   const mealsPerDay = parseInt(document.getElementById('mealsPerDay').value) || 2;
   const mealWeight = document.getElementById('mealWeight').value.trim();
   const mealTimes = [];
-  for (let i = 0; i < mealsPerDay; i++) {
-    mealTimes.push(document.getElementById(`mealTime_${i}`).value);
-  }
+  for (let i = 0; i < mealsPerDay; i++) mealTimes.push(document.getElementById(`mealTime_${i}`).value);
   const waterReminder = document.getElementById('waterReminder').checked;
   const weightVal = step1.weight;
-  const weightsArray = [];
-  const weightDatesArray = [];
+  const weightsArray = [], weightDatesArray = [];
   if (weightVal) {
     const val = parseFloat(weightVal);
-    if (!isNaN(val)) {
-      weightsArray.push(val);
-      weightDatesArray.push(new Date().toISOString().slice(0,10));
-    }
+    if (!isNaN(val)) { weightsArray.push(val); weightDatesArray.push(new Date().toISOString().slice(0,10)); }
   }
   data = {
     pet: {
-      name: step1.name,
-      breed: step1.breed,
+      name: step1.name, breed: step1.breed,
       weight: weightVal ? weightVal + ' kg' : '--',
-      targetWeight: '',
-      birthDate: step1.birthDate || '',
+      targetWeight: '', birthDate: step1.birthDate || '',
       age: step1.birthDate ? calculateAge(step1.birthDate) : 'Wiek nieznany',
-      img: step1.img || '',
-      imgPosition: step1.imgPosition || '50% 50%',
-      imgZoom: step1.imgZoom || 1
+      img: step1.img || '', imgPosition: step1.imgPosition || '50% 50%', imgZoom: step1.imgZoom || 1
     },
-    tasks: [],
-    weights: weightsArray,
-    weightDates: weightDatesArray,
-    walks: [],
-    expenses: [],
-    events: [],
+    tasks: [], weights: weightsArray, weightDates: weightDatesArray,
+    walks: [], expenses: [], events: [],
     feedingPlan: { enabled: true, mealsPerDay, mealWeight: mealWeight || '', mealTimes, waterReminder },
-    groomingLog: [],
-    pottyBreaks: []
+    groomingLog: [], pottyBreaks: []
   };
   const today = new Date().toISOString().slice(0,10);
   data.tasks = data.tasks.concat(generateFeedingTasksForDate(today));
@@ -468,17 +430,47 @@ function renderTab(tab){
 function renderDashboard(){
   const today=new Date().toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'short'});
   const todayStr = new Date().toISOString().slice(0,10);
-  let todaysTasks = data.tasks.filter(t => t.date === todayStr && !t.done);
-  todaysTasks.sort((a,b) => (a.time || '23:59').localeCompare(b.time || '23:59'));
-
-  let tasksHtml = todaysTasks.length ? todaysTasks.map(t=>`
-    <div class="task-card" data-id="${t.id}" data-type="${t.type}">
-      <div class="check">✓</div>
-      <div style="font-size:22px">${t.icon}</div>
-      <h3>${t.title}</h3>
-      <p>${t.sub}</p>
-    </div>`).join('') : `<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--secondary)">Brak zaplanowanych zadań na dziś.</div>`;
-
+  
+  let tasks = data.tasks.filter(t => t.date === todayStr && !t.done);
+  const todayEvents = data.events.filter(e => isEventOnDate(e, todayStr));
+  
+  let allItems = [];
+  
+  tasks.forEach(t => {
+    allItems.push({
+      time: t.time || '23:59',
+      html: `
+        <div class="task-card" data-id="${t.id}" data-type="${t.type}">
+          <div class="check">✓</div>
+          <div style="font-size:22px">${t.icon}</div>
+          <h3>${t.title}</h3>
+          <p>${t.sub}</p>
+        </div>`
+    });
+  });
+  
+  todayEvents.forEach(z => {
+    const typeIcon = { 'vet': '🩺', 'groom': '✂️', 'walk': '🦮', 'training': '🎾', 'other': '📅' }[z.type] || '📅';
+    let sub = `${z.time} • ${z.duration} min`;
+    if (z.note) sub += `<br><small>📝 ${z.note}</small>`;
+    allItems.push({
+      time: z.time || '23:59',
+      html: `
+        <div class="task-card" data-event-id="${z.id}">
+          <div style="font-size:22px">${typeIcon}</div>
+          <h3>${z.title}</h3>
+          <p>${sub}</p>
+        </div>`
+    });
+  });
+  
+  allItems.sort((a,b) => a.time.localeCompare(b.time));
+  
+  const tasksHtml = allItems.length ? allItems.map(item => item.html).join('') : 
+    `<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--secondary)">Brak zaplanowanych zadań na dziś.</div>`;
+  
+  const scrollClass = allItems.length > 4 ? 'scrollable-tasks' : '';
+  
   const pottyToday = (data.pottyBreaks || []).filter(p => p.date === todayStr);
   const poopCount = pottyToday.filter(p => p.type === 'poop').length;
   const peeCount = pottyToday.filter(p => p.type === 'pee').length;
@@ -493,10 +485,11 @@ function renderDashboard(){
   const n = quickActions.length;
   const cols = n <= 4 ? n : (n <= 6 ? 3 : 4);
   const quickHtml = `<div class="quick-grid" style="grid-template-columns:repeat(${cols},1fr)">` + quickActions.map(a => `<div class="q-btn" id="${a.id}" onclick="${a.onclick}"><span>${a.icon}</span>${a.label}</div>`).join('') + '</div>';
+  
   return `
   <div class="section">
     <div class="section-head"><h2>Dzisiaj</h2><div class="chip">📅 ${today}</div></div>
-    <div class="grid2">${tasksHtml}</div>
+    <div class="grid2 ${scrollClass}">${tasksHtml}</div>
     ${pottyToday.length ? `<div class="potty-counter">💩 Kupy: ${poopCount} | 💧 Siku: ${peeCount}</div>` : ''}
     <div class="waga-card">
       <div style="display:flex;justify-content:space-between"><h2 style="font-size:22px">Waga</h2><span style="color:var(--secondary);font-size:13px">ostatnie 30 dni</span></div>
@@ -508,7 +501,7 @@ function renderDashboard(){
 }
 
 function attachDashboardEvents(){
-  document.querySelectorAll('.task-card').forEach(card=>{
+  document.querySelectorAll('.task-card[data-id]').forEach(card=>{
     card.onclick=()=>{
       const id = parseInt(card.dataset.id);
       const type = card.dataset.type;
@@ -561,10 +554,10 @@ function renderStats(){
     </div>
     <div id="stat-waga">
      <div class="waga-card">
-  <div style="display:flex;justify-content:space-between"><h2 style="font-size:22px">Waga</h2><span style="color:var(--secondary);font-size:13px">ostatnie 30 dni</span></div>
-  ${data.weights.length ? `<canvas id="chartWaga" height="120"></canvas>
-  <div style="text-align:right;margin-top:8px;font-weight:700;color:var(--secondary);font-size:14px">${data.pet.weight}${data.pet.targetWeight ? ' • Cel: ' + data.pet.targetWeight : ''}</div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak pomiarów wagi. Dodaj pierwszą wagę.</p>`}
-</div>
+      <div style="display:flex;justify-content:space-between"><h2 style="font-size:22px">Waga</h2><span style="color:var(--secondary);font-size:13px">ostatnie 30 dni</span></div>
+      ${data.weights.length ? `<canvas id="chartWaga" height="120"></canvas>
+      <div style="text-align:right;margin-top:8px;font-weight:700;color:var(--secondary);font-size:14px">${data.pet.weight}${data.pet.targetWeight ? ' • Cel: ' + data.pet.targetWeight : ''}</div>` : `<p style="text-align:center;color:var(--secondary);padding:20px">Brak pomiarów wagi. Dodaj pierwszą wagę.</p>`}
+     </div>
       <div id="listaWag"></div>
       <button onclick="openSheet('weight')" id="btn-add-weight" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj pomiar</button>
     </div>
@@ -592,6 +585,7 @@ function renderStats(){
       </div>
       <div id="listaWydatkow"></div>
       <button onclick="openSheet('expense')" id="btn-add-expense" style="width:100%;background:var(--primary);color:white;padding:14px;border-radius:14px;border:none;font-weight:700;margin-top:10px">+ Dodaj wydatek</button>
+    </div>
   </div>`;
 }
 
@@ -622,22 +616,10 @@ function rysujWage(){
   if(!wagi.length) return;
   let ctx=document.getElementById('chartWaga'); 
   if(window.cW) window.cW.destroy();
-  const datasets = [{ 
-    data: wagi, 
-    borderColor:'#8FBF9A', 
-    backgroundColor:'rgba(143,191,154,0.15)', 
-    tension:0.4, 
-    fill:true 
-  }];
+  const datasets = [{ data: wagi, borderColor:'#8FBF9A', backgroundColor:'rgba(143,191,154,0.15)', tension:0.4, fill:true }];
   if (data.pet.targetWeight) {
     const target = parseFloat(data.pet.targetWeight);
-    if (!isNaN(target)) datasets.push({ 
-      data:Array(wagi.length).fill(target), 
-      borderColor:'#E74C3C', 
-      borderDash:[5,5], 
-      pointRadius:0, 
-      fill:false 
-    });
+    if (!isNaN(target)) datasets.push({ data:Array(wagi.length).fill(target), borderColor:'#E74C3C', borderDash:[5,5], pointRadius:0, fill:false });
   }
   window.cW=new Chart(ctx,{type:'line',data:{labels:wagi.map((_,i)=>i+1),datasets},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
   document.getElementById('listaWag').innerHTML = wagi.map((w,i)=>{
@@ -650,14 +632,11 @@ function rysujSpacery(){
   let spacery = data.walks.map(w => (typeof w === 'number') ? { km: w, min: 0 } : w);
   if(!spacery.length) return;
   spacery = spacery.slice(-aktywnoscRange);
-  
   let ctx=document.getElementById('chartSpacer'); 
   if(window.cS) window.cS.destroy();
   window.cS=new Chart(ctx,{type:'bar',data:{labels:spacery.map((_,i)=>`Spacer ${i+1}`),datasets:[{data:spacery.map(s=>s.km),backgroundColor:'#D6E9D3',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
-  
   const sumKm = spacery.reduce((a,b)=>a+b.km,0);
   document.getElementById('sumKm').textContent = sumKm.toFixed(1)+' km';
-  
   const withTime = spacery.filter(s => s.min > 0);
   if (withTime.length > 0) {
     const sumMin = withTime.reduce((a,b)=>a+b.min,0);
@@ -666,7 +645,6 @@ function rysujSpacery(){
   } else {
     document.getElementById('avgMin').textContent = '-- min';
   }
-  
   document.getElementById('listaSpacerow').innerHTML = spacery.map((s,i)=>{
     let opis = `Spacer ${i+1} • ${s.km} km`;
     if (s.min > 0) opis += `, ${s.min} min`;
@@ -690,34 +668,14 @@ function rysujPortfel(){
   document.getElementById('totalPln').textContent=total+' zł';
   let cats={};
   wydatki.forEach(e=>cats[e.cat]=(cats[e.cat]||0)+e.kwota);
-  const colors = {
-    'Karma': '#4CAF50',
-    'Weterynarz': '#2196F3',
-    'Zabawki': '#FF9800',
-    'Pielęgnacja': '#9C27B0',
-    'Inne': '#607D8B'
-  };
+  const colors = { 'Karma': '#4CAF50', 'Weterynarz': '#2196F3', 'Zabawki': '#FF9800', 'Pielęgnacja': '#9C27B0', 'Inne': '#607D8B' };
   const labels = Object.keys(cats);
   const values = Object.values(cats);
   const backgroundColors = labels.map(l => colors[l] || '#999');
   let ctx=document.getElementById('chartKasa');
   if(window.cK) window.cK.destroy();
-  window.cK=new Chart(ctx,{
-    type:'doughnut',
-    data:{ labels: labels, datasets:[{ data: values, backgroundColor: backgroundColors, borderWidth: 2, borderColor: '#fff' }] },
-    options:{
-      plugins:{
-        legend:{ position:'bottom', labels:{ padding: 10, usePointStyle: true } },
-        tooltip:{ callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} zł` } }
-      }
-    }
-  });
-  document.getElementById('listaWydatkow').innerHTML = wydatki.map(e => `
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;">
-      <span>${e.d} • ${e.cat}</span>
-      <b>${e.kwota} zł</b>
-    </div>
-  `).join('');
+  window.cK=new Chart(ctx,{ type:'doughnut', data:{ labels: labels, datasets:[{ data: values, backgroundColor: backgroundColors, borderWidth: 2, borderColor: '#fff' }] }, options:{ plugins:{ legend:{ position:'bottom', labels:{ padding: 10, usePointStyle: true } }, tooltip:{ callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} zł` } } } });
+  document.getElementById('listaWydatkow').innerHTML = wydatki.map(e => `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;"><span>${e.d} • ${e.cat}</span><b>${e.kwota} zł</b></div>`).join('');
 }
 
 // ============ KALENDARZ ============
@@ -737,7 +695,7 @@ function renderCalendar(){
     
     <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center">
       <b id="selDateLabel">Wydarzenia</b>
-      <button onclick="dodajWizyte()" id="btn-add-event" style="background:var(--primary);color:white;border:none;padding:8px 14px;border-radius:12px;font-weight:700">+ Wizyta</button>
+      <button onclick="openSheet('event')" id="btn-add-event" style="background:var(--primary);color:white;border:none;padding:8px 14px;border-radius:12px;font-weight:700">+ Wizyta</button>
     </div>
     <div id="dayEvents"></div>
   </div>`;
@@ -746,6 +704,18 @@ function initCalendar(){
   curM = new Date(selDate);
   renderCal();
   attachInputLogging();
+}
+function isEventOnDate(event, dateStr){
+  const start = new Date(event.date);
+  const current = new Date(dateStr);
+  const diff = Math.floor((current - start) / (86400000));
+  switch(event.recurrence){
+    case 'none': return event.date === dateStr;
+    case 'daily': return diff >= 0;
+    case 'weekly': return diff >= 0 && diff % 7 === 0;
+    case 'monthly': return diff >= 0 && current.getDate() === start.getDate();
+    default: return false;
+  }
 }
 function renderCal(){
   document.getElementById('calMonthLabel').textContent=curM.toLocaleDateString('pl-PL',{month:'long',year:'numeric'});
@@ -759,7 +729,7 @@ function renderCal(){
   let todayStr=new Date().toISOString().slice(0,10);
   for(let d=1;d<=days;d++){
     let iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    let has = data.events.some(z=>z.date===iso) || (data.feedingPlan && data.feedingPlan.enabled);
+    let has = data.events.some(z => isEventOnDate(z, iso)) || (data.feedingPlan && data.feedingPlan.enabled);
     let div=document.createElement('div'); 
     div.className='cal-day'+(iso===todayStr?' today':'')+(has?' has':'')+(iso===selDate?' selected':'');
     div.textContent=d;
@@ -771,36 +741,34 @@ function renderCal(){
 }
 function renderDay(){
   document.getElementById('selDateLabel').textContent=selDate;
-  let list=data.events.filter(z=>z.date===selDate);
-  let html = '';
+  let items = [];
   if (data.feedingPlan && data.feedingPlan.enabled) {
     const feedingTasks = generateFeedingTasksForDate(selDate);
     feedingTasks.forEach(t => {
-      html += `<div class="event" style="border-left-color:#8FBF9A"><div><b>${t.title}</b><br><small>${t.sub}</small></div></div>`;
+      items.push({ time: t.time, html: `<div class="event" style="border-left-color:#8FBF9A"><div><b>${t.title}</b><br><small>${t.sub}</small></div></div>` });
     });
     if (data.feedingPlan.waterReminder && data.feedingPlan.mealTimes.length > 0) {
       const waterTime = subtractMinutes(data.feedingPlan.mealTimes[0], 30);
-      html += `<div class="event" style="border-left-color:#4A7C6F"><div><b>💧 Sprawdź wodę</b><br><small>${waterTime}</small></div></div>`;
+      items.push({ time: waterTime, html: `<div class="event" style="border-left-color:#4A7C6F"><div><b>💧 Sprawdź wodę</b><br><small>${waterTime}</small></div></div>` });
     }
   }
-  list.forEach(z => {
-    html += `<div class="event ${z.type}"><div><b>${z.title}</b><br><small style="color:var(--secondary)">${z.sub}</small></div><div onclick="usunZad(${z.id})" style="cursor:pointer">🗑️</div></div>`;
+  const dayEvents = data.events.filter(e => isEventOnDate(e, selDate));
+  dayEvents.forEach(z => {
+    const typeIcon = { 'vet': '🩺', 'groom': '✂️', 'walk': '🦮', 'training': '🎾', 'other': '📅' }[z.type] || '📅';
+    let sub = `${z.time} • ${z.duration} min`;
+    if (z.note) sub += `<br><small>📝 ${z.note}</small>`;
+    if (z.recurrence !== 'none') sub += `<br><small>🔁 ${z.recurrence}</small>`;
+    items.push({ time: z.time, html: `<div class="event ${z.type}" style="border-left-color: var(--accent);"><div><b>${typeIcon} ${z.title}</b><br><small style="color:var(--secondary)">${sub}</small></div><div onclick="usunZad(${z.id})" style="cursor:pointer">🗑️</div></div>` });
   });
-  let el=document.getElementById('dayEvents');
-  if(!html) el.innerHTML='<div style="color:var(--secondary);padding:12px;text-align:center">Brak wydarzeń tego dnia</div>';
-  else el.innerHTML=html;
+  items.sort((a,b) => a.time.localeCompare(b.time));
+  let el = document.getElementById('dayEvents');
+  if(!items.length) {
+    el.innerHTML = '<div style="color:var(--secondary);padding:12px;text-align:center">Brak wydarzeń tego dnia</div>';
+  } else {
+    el.innerHTML = items.map(item => item.html).join('');
+  }
 }
 function zmienMies(dir){curM.setMonth(curM.getMonth()+dir); logAction(`Zmieniono miesiąc w kalendarzu`); renderCal();}
-function dodajWizyte(){
-  let t=prompt('Tytuł wizyty np WET Kontrola'); 
-  if(!t) return;
-  let g=prompt('Godzina np 14:00')||'10:00';
-  let type = confirm('Czy to wizyta weterynaryjna?') ? 'vet' : 'groom';
-  data.events.push({id:Date.now(),date:selDate,title:t,sub:g,type:type});
-  save(); 
-  logAction(`Dodano wizytę: ${t}, data: ${selDate}`);
-  renderCal();
-}
 function usunZad(id){data.events=data.events.filter(z=>z.id!==id); save(); logAction(`Usunięto wizytę o id=${id}`); renderCal();}
 
 // ============ PIELĘGNACJA ============
@@ -812,7 +780,6 @@ function renderGrooming(){
   const lastBrush = grooming.filter(g=>g.type==='brush').sort((a,b)=>b.date.localeCompare(a.date))[0];
   const today = new Date().toISOString().slice(0,10);
   function daysSince(dateStr){ if(!dateStr) return '—'; const diff = Math.floor((new Date(today)-new Date(dateStr))/(86400000)); return diff + ' dni temu'; }
-  
   return `
   <div class="section">
     <div class="section-head"><h2>Pielęgnacja</h2></div>
@@ -863,31 +830,12 @@ function renderProfile(){
       <button class="btn-save" id="btn-save-profile" onclick="savePetFromProfile()">Zapisz zmiany</button>
     </div>
 
-    <!-- SEKCJA PLAN KARMIENIA -->
     <div class="card">
       <h3 style="margin-bottom:12px">🍽️ Plan karmienia</h3>
-      <div class="profile-field">
-        <label>Liczba posiłków dziennie</label>
-        <select class="input" id="feeding_mealsPerDay" onchange="updateProfileMealTimeInputs()">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
-      </div>
-      <div class="profile-field">
-        <label>Waga jednego posiłku (g)</label>
-        <input class="input" id="feeding_mealWeight" type="number" placeholder="np. 150">
-      </div>
-      <div class="profile-field">
-        <label>Godziny posiłków</label>
-        <div id="profile_mealTimesContainer"></div>
-      </div>
-      <div class="profile-field">
-        <label class="flex items-center gap-2" style="margin-bottom:0">
-          <input type="checkbox" id="feeding_waterReminder" style="width:auto"> Przypominaj rano o wodzie
-        </label>
-      </div>
+      <div class="profile-field"><label>Liczba posiłków dziennie</label><select class="input" id="feeding_mealsPerDay" onchange="updateProfileMealTimeInputs()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+      <div class="profile-field"><label>Waga jednego posiłku (g)</label><input class="input" id="feeding_mealWeight" type="number" placeholder="np. 150"></div>
+      <div class="profile-field"><label>Godziny posiłków</label><div id="profile_mealTimesContainer"></div></div>
+      <div class="profile-field"><label class="flex items-center gap-2" style="margin-bottom:0"><input type="checkbox" id="feeding_waterReminder" style="width:auto"> Przypominaj rano o wodzie</label></div>
       <button class="btn-save" id="btn-save-feeding-plan" onclick="saveFeedingPlan()">Zapisz plan</button>
     </div>
 
@@ -905,10 +853,7 @@ function populateFeedingPlanFields() {
   document.getElementById('feeding_waterReminder').checked = plan.waterReminder;
   updateProfileMealTimeInputs();
   const times = plan.mealTimes || [];
-  times.forEach((t, i) => {
-    const input = document.getElementById(`profile_mealTime_${i}`);
-    if (input) input.value = t;
-  });
+  times.forEach((t, i) => { const input = document.getElementById(`profile_mealTime_${i}`); if (input) input.value = t; });
 }
 function updateProfileMealTimeInputs() {
   const count = parseInt(document.getElementById('feeding_mealsPerDay').value) || 2;
@@ -922,10 +867,7 @@ function updateProfileMealTimeInputs() {
   container.innerHTML = html;
   const plan = data.feedingPlan;
   if (plan && plan.mealTimes) {
-    plan.mealTimes.forEach((t, i) => {
-      const input = document.getElementById(`profile_mealTime_${i}`);
-      if (input) input.value = t;
-    });
+    plan.mealTimes.forEach((t, i) => { const input = document.getElementById(`profile_mealTime_${i}`); if (input) input.value = t; });
   }
   attachInputLogging();
 }
@@ -933,38 +875,17 @@ function saveFeedingPlan() {
   const mealsPerDay = parseInt(document.getElementById('feeding_mealsPerDay').value) || 2;
   const mealWeight = document.getElementById('feeding_mealWeight').value.trim();
   const mealTimes = [];
-  for (let i = 0; i < mealsPerDay; i++) {
-    const input = document.getElementById(`profile_mealTime_${i}`);
-    if (input) mealTimes.push(input.value);
-  }
+  for (let i = 0; i < mealsPerDay; i++) { const input = document.getElementById(`profile_mealTime_${i}`); if (input) mealTimes.push(input.value); }
   const waterReminder = document.getElementById('feeding_waterReminder').checked;
-  
-  data.feedingPlan = {
-    enabled: true,
-    mealsPerDay,
-    mealWeight,
-    mealTimes,
-    waterReminder
-  };
-  
+  data.feedingPlan = { enabled: true, mealsPerDay, mealWeight, mealTimes, waterReminder };
   const today = new Date().toISOString().slice(0,10);
   data.tasks = data.tasks.filter(t => !((t.type === 'feeding' || t.type === 'water') && t.date === today));
   const feedingTasks = generateFeedingTasksForDate(today);
   data.tasks = data.tasks.concat(feedingTasks);
   if (waterReminder && mealTimes.length > 0) {
     const waterTime = subtractMinutes(mealTimes[0], 30);
-    data.tasks.push({
-      id: generateUniqueId(),
-      type:'water',
-      title:'Sprawdź wodę',
-      sub:'Wymień na świeżą',
-      icon:'💧',
-      done:false,
-      date:today,
-      time: waterTime
-    });
+    data.tasks.push({ id: generateUniqueId(), type:'water', title:'Sprawdź wodę', sub:'Wymień na świeżą', icon:'💧', done:false, date:today, time: waterTime });
   }
-  
   save();
   logAction('Zapisano plan karmienia i przeliczono zadania.');
   renderTab('profile');
@@ -980,10 +901,7 @@ function savePetFromProfile(){
   data.pet.targetWeight = document.getElementById('p_targetWeight').value.trim();
   if (newWeightVal && newWeightVal !== oldWeight) {
     const val = parseFloat(newWeightVal);
-    if (!isNaN(val)) {
-      data.weights.push(val);
-      data.weightDates.push(new Date().toISOString().slice(0,10));
-    }
+    if (!isNaN(val)) { data.weights.push(val); data.weightDates.push(new Date().toISOString().slice(0,10)); }
   }
   save(); 
   logAction('Zapisano zmiany w profilu.');
@@ -1003,59 +921,46 @@ function openSheet(type){
   logAction(`Otworzono sheet: ${type}`);
   let html='';
   if(type=='feeding'){
-    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">🍖 Dodaj karmienie</h3>
-      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
-    </div>
-    <input class="input" id="f_time" type="time" value="`+new Date().toTimeString().slice(0,5)+`">
-    <input class="input" id="f_amount" placeholder="Ilość np 120g">
-    <select class="input" id="f_type"><option>Sucha</option><option>Mokra</option><option>BARF</option></select>
-    <button class="btn-save" onclick="saveFeeding()">Zapisz</button>`;
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">🍖 Dodaj karmienie</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div><input class="input" id="f_time" type="time" value="`+new Date().toTimeString().slice(0,5)+`"><input class="input" id="f_amount" placeholder="Ilość np 120g"><select class="input" id="f_type"><option>Sucha</option><option>Mokra</option><option>BARF</option></select><button class="btn-save" onclick="saveFeeding()">Zapisz</button>`;
   }
   else if(type=='walk'){
-    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">🦮 Dodaj spacer</h3>
-      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
-    </div>
-    <input class="input" id="w_km" placeholder="km" type="number" step="0.1">
-    <input class="input" id="w_min" placeholder="min" type="number">
-    <button class="btn-save" onclick="saveWalk()">Zapisz</button>`;
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">🦮 Dodaj spacer</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div><input class="input" id="w_km" placeholder="km" type="number" step="0.1"><input class="input" id="w_min" placeholder="min" type="number"><button class="btn-save" onclick="saveWalk()">Zapisz</button>`;
   }
   else if(type=='weight'){
-    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">⚖️ Dodaj wagę</h3>
-      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
-    </div>
-    <input class="input" id="w_val" placeholder="kg np 16.4" type="number" step="0.1">
-    <button class="btn-save" onclick="saveWeightFromModal()">Zapisz</button>`;
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">⚖️ Dodaj wagę</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div><input class="input" id="w_val" placeholder="kg np 16.4" type="number" step="0.1"><button class="btn-save" onclick="saveWeightFromModal()">Zapisz</button>`;
   }
   else if(type=='medicine'){
-    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">💊 Dodaj lek</h3>
-      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
-    </div>
-    <input class="input" id="m_name" placeholder="Nazwa">
-    <input class="input" id="m_dose" placeholder="Dawka">
-    <button class="btn-save" onclick="saveMed()">Zapisz</button>`;
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">💊 Dodaj lek</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div><input class="input" id="m_name" placeholder="Nazwa"><input class="input" id="m_dose" placeholder="Dawka"><button class="btn-save" onclick="saveMed()">Zapisz</button>`;
   }
   else if(type=='expense'){
-    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">💰 Dodaj wydatek</h3>
-      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
-    </div>
-    <select class="input" id="exp_cat"><option>Karma</option><option>Weterynarz</option><option>Zabawki</option><option>Pielęgnacja</option><option>Inne</option></select>
-    <input class="input" id="exp_amount" type="number" placeholder="Kwota zł">
-    <button class="btn-save" onclick="saveExpense()">Zapisz</button>`;
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">💰 Dodaj wydatek</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div><select class="input" id="exp_cat"><option>Karma</option><option>Weterynarz</option><option>Zabawki</option><option>Pielęgnacja</option><option>Inne</option></select><input class="input" id="exp_amount" type="number" placeholder="Kwota zł"><button class="btn-save" onclick="saveExpense()">Zapisz</button>`;
   }
   else if(type=='sos'){
-    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">🚨 Zaginął pies</h3>
-      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">🚨 Zaginął pies</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div><input class="input" id="sos_phone" placeholder="Twój numer telefonu"><input class="input" id="sos_date" type="date" value="${new Date().toISOString().slice(0,10)}"><input class="input" id="sos_note" placeholder="Dodatkowe informacje"><button class="btn-save" onclick="generateSOSPoster()">Generuj plakat</button>`;
+  }
+  else if(type=='event'){
+    html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">📅 Dodaj wydarzenie</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div>
+    <label style="font-weight:700;font-size:14px;">Typ wydarzenia</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">
+      <div class="chip" id="ev-type-vet" onclick="setEventType('vet')">🩺 Weterynarz</div>
+      <div class="chip" id="ev-type-groom" onclick="setEventType('groom')">✂️ Fryzjer</div>
+      <div class="chip" id="ev-type-walk" onclick="setEventType('walk')">🦮 Spacer</div>
+      <div class="chip" id="ev-type-training" onclick="setEventType('training')">🎾 Trening</div>
+      <div class="chip" id="ev-type-other" onclick="setEventType('other')">📅 Inne</div>
     </div>
-    <input class="input" id="sos_phone" placeholder="Twój numer telefonu">
-    <input class="input" id="sos_date" type="date" value="${new Date().toISOString().slice(0,10)}">
-    <input class="input" id="sos_note" placeholder="Dodatkowe informacje">
-    <button class="btn-save" onclick="generateSOSPoster()">Generuj plakat</button>`;
+    <label style="font-weight:700;font-size:14px;">Nazwa wydarzenia</label>
+    <input class="input" id="ev_title" placeholder="np. Szczepienie, Kąpiel, Szkoła">
+    <label style="font-weight:700;font-size:14px;">Data</label>
+    <input class="input" id="ev_date" type="date" value="${selDate}">
+    <label style="font-weight:700;font-size:14px;">Godzina</label>
+    <input class="input" id="ev_time" type="time" value="12:00">
+    <label style="font-weight:700;font-size:14px;">Cykliczność</label>
+    <select class="input" id="ev_recurrence"><option value="none">Nie powtarzaj</option><option value="daily">Codziennie</option><option value="weekly">Co tydzień</option><option value="monthly">Co miesiąc</option></select>
+    <label style="font-weight:700;font-size:14px;">Czas trwania</label>
+    <select class="input" id="ev_duration"><option value="30">30 min</option><option value="60" selected>1 godzina</option><option value="120">2 godziny</option><option value="240">4 godziny</option></select>
+    <label style="font-weight:700;font-size:14px;">Notatka</label>
+    <input class="input" id="ev_note" placeholder="Dodatkowe informacje...">
+    <button class="btn-save" onclick="saveEvent()">Zapisz wydarzenie</button>`;
   }
   document.getElementById('sheetContent').innerHTML=html;
   document.getElementById('modal').classList.add('open');
@@ -1066,9 +971,7 @@ function saveFeeding(){
   let t=document.getElementById('f_time').value;
   let a=document.getElementById('f_amount').value;
   data.tasks.push({id:Date.now(),type:'feeding',title:'Karmienie',sub:t+' • '+(a||'Gotowe'),icon:'🍖',done:true,date:new Date().toISOString().slice(0,10)});
-  save();
-  logAction(`Dodano karmienie: ${t}, ${a}`);
-  closeSheet();
+  save(); logAction(`Dodano karmienie: ${t}, ${a}`); closeSheet();
   if(currentTab==='stats') renderTab('stats'); else renderTab('dashboard');
 }
 function saveWalk(){
@@ -1076,9 +979,7 @@ function saveWalk(){
   let min=parseInt(document.getElementById('w_min').value)||0;
   data.walks.push({km,min});
   data.tasks.push({id:Date.now(),type:'walk',title:'Spacer',sub:km+' km • '+min+' min',icon:'🦮',done:true,date:new Date().toISOString().slice(0,10)});
-  save();
-  logAction(`Dodano spacer: ${km} km, ${min} min`);
-  closeSheet();
+  save(); logAction(`Dodano spacer: ${km} km, ${min} min`); closeSheet();
   if(currentTab==='stats') renderTab('stats'); else renderTab('dashboard');
 }
 function saveWeightFromModal(){
@@ -1088,24 +989,14 @@ function saveWeightFromModal(){
   if(!data.weightDates) data.weightDates=[];
   data.weightDates.push(new Date().toISOString().slice(0,10));
   data.pet.weight=v.toFixed(1)+' kg';
-  save();
-  logAction(`Dodano wagę: ${v} kg`);
-  closeSheet();
-  if(currentTab==='stats') {
-    renderTab('stats');
-    const wagaTab = document.querySelector('.s-tab[onclick*="waga"]');
-    if(wagaTab) showStat('waga', wagaTab);
-  } else {
-    renderTab('dashboard');
-    updateHeader();
-  }
+  save(); logAction(`Dodano wagę: ${v} kg`); closeSheet();
+  if(currentTab==='stats') { renderTab('stats'); const wagaTab = document.querySelector('.s-tab[onclick*="waga"]'); if(wagaTab) showStat('waga', wagaTab); }
+  else { renderTab('dashboard'); updateHeader(); }
 }
 function saveMed(){
   let n=document.getElementById('m_name').value;
   data.tasks.push({id:Date.now(),type:'medicine',title:n||'Lek',sub:'Dodano',icon:'💊',done:false,date:new Date().toISOString().slice(0,10)});
-  save();
-  logAction(`Dodano lek: ${n}`);
-  closeSheet();
+  save(); logAction(`Dodano lek: ${n}`); closeSheet();
   if(currentTab==='stats') renderTab('stats'); else renderTab('dashboard');
 }
 function saveExpense(){
@@ -1113,16 +1004,30 @@ function saveExpense(){
   let amount=parseFloat(document.getElementById('exp_amount').value);
   if(!amount) return;
   data.expenses.push({cat, kwota:amount, d:new Date().toISOString().slice(0,10)});
+  save(); logAction(`Dodano wydatek: ${cat}, ${amount} zł`); closeSheet();
+  if(currentTab==='stats') { renderTab('stats'); const portfelTab = document.querySelector('.s-tab[onclick*="portfel"]'); if(portfelTab) showStat('portfel', portfelTab); }
+  else renderTab('dashboard');
+}
+function setEventType(type){
+  selectedEventType = type;
+  document.querySelectorAll('[id^="ev-type-"]').forEach(el => el.style.background = 'var(--cardBeige)');
+  document.getElementById('ev-type-' + type).style.background = 'var(--cardGreen)';
+}
+function saveEvent(){
+  const title = document.getElementById('ev_title').value.trim();
+  const date = document.getElementById('ev_date').value;
+  const time = document.getElementById('ev_time').value;
+  const recurrence = document.getElementById('ev_recurrence').value;
+  const duration = document.getElementById('ev_duration').value;
+  const note = document.getElementById('ev_note').value.trim();
+  if (!title || !date) { alert('Uzupełnij nazwę i datę wydarzenia'); return; }
+  const newEvent = { id: Date.now(), type: selectedEventType, title, date, time: time || '12:00', recurrence, duration, note: note || '' };
+  data.events.push(newEvent);
   save();
-  logAction(`Dodano wydatek: ${cat}, ${amount} zł`);
+  logAction(`Dodano wydarzenie: ${title} (${date} ${time})`);
   closeSheet();
-  if(currentTab==='stats') {
-    renderTab('stats');
-    const portfelTab = document.querySelector('.s-tab[onclick*="portfel"]');
-    if(portfelTab) showStat('portfel', portfelTab);
-  } else {
-    renderTab('dashboard');
-  }
+  if(currentTab==='calendar'){ renderCalendar(); initCalendar(); }
+  else renderTab('dashboard');
 }
 
 // ============ SOS ============
@@ -1134,21 +1039,7 @@ function generateSOSPoster(){
   const breed = data.pet.breed || 'Nieznana';
   const img = data.pet.img || '';
   logAction('Wygenerowano plakat SOS.');
-  const htmlContent = `<!DOCTYPE html><html><head><title>Zaginął ${name}</title><style>
-    body{font-family:sans-serif;background:#FFFBF2;color:#0F3D2E;text-align:center;padding:20px}
-    .poster{max-width:500px;margin:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
-    img{width:100%;max-height:300px;object-fit:contain;border-radius:12px}
-    h1{font-size:2em;margin:10px 0}
-    .info{font-size:1.2em;margin:8px 0}
-  </style></head><body><div class="poster">
-    <h1>🚨 ZAGINĄŁ PIES</h1>
-    ${img ? `<img src="${img}" alt="${name}">` : '<div style="height:200px;background:#eee;border-radius:12px"></div>'}
-    <div class="info"><strong>${name}</strong></div>
-    <div class="info">${breed}</div>
-    <div class="info">Data zaginięcia: ${date}</div>
-    <div class="info">Notatka: ${note}</div>
-    <div class="info" style="font-size:1.5em;font-weight:bold">Kontakt: ${phone}</div>
-  </div></body></html>`;
+  const htmlContent = `<!DOCTYPE html><html><head><title>Zaginął ${name}</title><style>body{font-family:sans-serif;background:#FFFBF2;color:#0F3D2E;text-align:center;padding:20px}.poster{max-width:500px;margin:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}img{width:100%;max-height:300px;object-fit:contain;border-radius:12px}h1{font-size:2em;margin:10px 0}.info{font-size:1.2em;margin:8px 0}</style></head><body><div class="poster"><h1>🚨 ZAGINĄŁ PIES</h1>${img ? `<img src="${img}" alt="${name}">` : '<div style="height:200px;background:#eee;border-radius:12px"></div>'}<div class="info"><strong>${name}</strong></div><div class="info">${breed}</div><div class="info">Data zaginięcia: ${date}</div><div class="info">Notatka: ${note}</div><div class="info" style="font-size:1.5em;font-weight:bold">Kontakt: ${phone}</div></div></body></html>`;
   const w = window.open('', '_blank');
   w.document.write(htmlContent);
   w.document.close();
@@ -1161,25 +1052,8 @@ function openNotifications(){
   const todayTasks = data.tasks.filter(t => t.date === today && !t.done);
   todayTasks.sort((a,b) => (a.time || '23:59').localeCompare(b.time || '23:59'));
   logAction('Otwarto powiadomienia, liczba zadań: ' + todayTasks.length);
-  let tasksHtml = todayTasks.length ? todayTasks.map(t => `
-    <div class="card" style="margin-top:8px" data-task-id="${t.id}">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <b>${t.icon} ${t.title}</b><br>
-          <small style="color:var(--secondary)">${t.sub}</small>
-        </div>
-        <span style="font-size:12px;color:var(--secondary)">${t.time || ''}</span>
-      </div>
-    </div>
-  `).join('') : '<div class="card" style="text-align:center;color:var(--secondary)">Brak dzisiejszych zadań</div>';
-  
-  const html = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">🔔 Powiadomienia</h3>
-      <button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button>
-    </div>
-    ${tasksHtml}
-  `;
+  let tasksHtml = todayTasks.length ? todayTasks.map(t => `<div class="card" style="margin-top:8px" data-task-id="${t.id}"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${t.icon} ${t.title}</b><br><small style="color:var(--secondary)">${t.sub}</small></div><span style="font-size:12px;color:var(--secondary)">${t.time || ''}</span></div></div>`).join('') : '<div class="card" style="text-align:center;color:var(--secondary)">Brak dzisiejszych zadań</div>';
+  const html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">🔔 Powiadomienia</h3><button onclick="closeSheet()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--secondary)">&times;</button></div>${tasksHtml}`;
   document.getElementById('sheetContent').innerHTML = html;
   document.getElementById('modal').classList.add('open');
 }
@@ -1207,22 +1081,14 @@ function openEditor(file, type) {
   };
   reader.readAsDataURL(file);
 }
-function closeEditor() {
-  document.getElementById('editorModal').classList.remove('open');
-}
+function closeEditor() { document.getElementById('editorModal').classList.remove('open'); }
 function updateEditorPosition() {
   const img = document.getElementById('editorImage');
   img.style.objectPosition = `50% ${editorY}%`;
   img.style.transform = `scale(${editorZoom})`;
 }
-document.getElementById('editorSlider').addEventListener('input', function() {
-  editorY = parseInt(this.value);
-  updateEditorPosition();
-});
-document.getElementById('editorZoomSlider').addEventListener('input', function() {
-  editorZoom = parseFloat(this.value);
-  updateEditorPosition();
-});
+document.getElementById('editorSlider').addEventListener('input', function() { editorY = parseInt(this.value); updateEditorPosition(); });
+document.getElementById('editorZoomSlider').addEventListener('input', function() { editorZoom = parseFloat(this.value); updateEditorPosition(); });
 let isDraggingEditor = false;
 let startDragY = 0;
 const editorPreview = document.getElementById('editorPreview');
@@ -1232,11 +1098,7 @@ document.addEventListener('mousemove', moveEditorDrag);
 document.addEventListener('touchmove', moveEditorDrag);
 document.addEventListener('mouseup', endEditorDrag);
 document.addEventListener('touchend', endEditorDrag);
-function startEditorDrag(e) {
-  isDraggingEditor = true;
-  startDragY = (e.clientY || e.touches[0].clientY);
-  editorPreview.style.cursor = 'grabbing';
-}
+function startEditorDrag(e) { isDraggingEditor = true; startDragY = (e.clientY || e.touches[0].clientY); editorPreview.style.cursor = 'grabbing'; }
 function moveEditorDrag(e) {
   if (!isDraggingEditor) return;
   e.preventDefault();
@@ -1249,10 +1111,7 @@ function moveEditorDrag(e) {
   document.getElementById('editorSlider').value = Math.round(editorY);
   updateEditorPosition();
 }
-function endEditorDrag() {
-  isDraggingEditor = false;
-  editorPreview.style.cursor = 'grab';
-}
+function endEditorDrag() { isDraggingEditor = false; editorPreview.style.cursor = 'grab'; }
 function saveEditedPhoto() {
   if (editorCallbackType === 'onboarding') {
     onboardingPhotoData = editorImageData;
@@ -1280,12 +1139,8 @@ function attachInputLogging() {
     if (!el.dataset.logged) {
       el.dataset.logged = 'true';
       const id = el.id || 'brak-id';
-      el.addEventListener('input', () => {
-        logAction(`Wprowadzono wartość w polu ${id}: ${el.value}`);
-      });
-      el.addEventListener('change', () => {
-        logAction(`Zmieniono pole ${id}: ${el.value}`);
-      });
+      el.addEventListener('input', () => logAction(`Wprowadzono wartość w polu ${id}: ${el.value}`));
+      el.addEventListener('change', () => logAction(`Zmieniono pole ${id}: ${el.value}`));
     }
   });
 }
